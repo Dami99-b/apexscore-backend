@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from typing import Dict, List, Optional
 import os
@@ -15,7 +14,6 @@ app = FastAPI(
     version="1.0"
 )
 
-# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -35,7 +33,6 @@ class BehavioralStabilityIndicators(BaseModel):
 
 # === DYNAMIC PROFILE GENERATION ===
 
-# Global cities/countries database
 LOCATIONS = [
     {"city": "Lagos", "country": "Nigeria", "currency": "NGN", "lat": 6.4541, "lng": 3.3947},
     {"city": "Nairobi", "country": "Kenya", "currency": "KES", "lat": -1.2864, "lng": 36.8344},
@@ -49,10 +46,7 @@ LOCATIONS = [
     {"city": "Bangkok", "country": "Thailand", "currency": "THB", "lat": 13.7563, "lng": 100.5018},
 ]
 
-EMAIL_DOMAINS = [
-    "gmail.com", "yahoo.com", "outlook.com", "hotmail.com", 
-    "icloud.com", "protonmail.com", "aol.com"
-]
+EMAIL_DOMAINS = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "icloud.com", "protonmail.com"]
 
 OCCUPATIONS = [
     "Shop Owner", "Market Vendor", "Taxi Driver", "Teacher", "Farmer",
@@ -61,28 +55,17 @@ OCCUPATIONS = [
     "Real Estate Agent", "Freelancer", "Driver", "Electrician"
 ]
 
-INSTITUTIONS = [
-    "FirstBank", "Access Bank", "Standard Bank", "Barclays", "ABSA",
-    "KCB Bank", "Equity Bank", "Zenith Bank", "GTBank", "Ecobank"
-]
+INSTITUTIONS = ["FirstBank", "Access Bank", "Standard Bank", "Barclays", "KCB Bank", "Equity Bank", "Zenith Bank", "GTBank", "Ecobank"]
 
 def generate_profile_from_name(name: str) -> Dict:
-    """
-    Generate a consistent profile for any name using hash-based randomization
-    Same name always generates same profile
-    """
-    # Use name hash as seed for consistency
+    """Generate consistent profile for any name using hash-based randomization"""
     name_hash = int(hashlib.md5(name.encode()).hexdigest(), 16)
     random.seed(name_hash)
     
-    # Generate ID from hash
     app_id = (name_hash % 9000) + 1000
-    
-    # Select location (consistent for same name)
     location = random.choice(LOCATIONS)
     occupation = random.choice(OCCUPATIONS)
     
-    # Determine risk profile (25% high, 35% medium, 40% low)
     risk_seed = random.random()
     if risk_seed < 0.25:
         profile_type = "high"
@@ -91,7 +74,6 @@ def generate_profile_from_name(name: str) -> Dict:
     else:
         profile_type = "low"
     
-    # Generate BSI scores based on profile type
     if profile_type == "low":
         bsi = {
             "location_consistency": random.randint(85, 98),
@@ -112,7 +94,7 @@ def generate_profile_from_name(name: str) -> Dict:
         }
         debt = random.uniform(30000, 120000)
         has_default = False
-    else:  # high risk
+    else:
         bsi = {
             "location_consistency": random.randint(25, 64),
             "ip_vs_address": random.randint(20, 55),
@@ -121,9 +103,8 @@ def generate_profile_from_name(name: str) -> Dict:
             "travel_frequency": random.randint(60, 90)
         }
         debt = random.uniform(50000, 200000)
-        has_default = random.random() < 0.4  # 40% chance of default for high risk
+        has_default = random.random() < 0.4
     
-    # Calculate ApexScore
     apex_score = round(
         bsi["location_consistency"] * 0.30 +
         bsi["ip_vs_address"] * 0.20 +
@@ -134,7 +115,6 @@ def generate_profile_from_name(name: str) -> Dict:
     
     risk_level = determine_risk_level(apex_score)
     
-    # Generate loan history
     loan_count = random.randint(1, 4)
     loan_history = []
     for i in range(loan_count):
@@ -146,7 +126,6 @@ def generate_profile_from_name(name: str) -> Dict:
             "date": f"{year}-{month:02d}"
         })
     
-    # Generate repayment history
     repayment_history = []
     months = ["2024-11", "2024-10", "2024-09", "2024-08", "2024-07"]
     for month in months:
@@ -163,25 +142,19 @@ def generate_profile_from_name(name: str) -> Dict:
             status = "on-time"
             days_late = None
         
-        payment = {
-            "date": month,
-            "status": status,
-            "amount": int(debt / 24)  # Monthly payment
-        }
+        payment = {"date": month, "status": status, "amount": int(debt / 24)}
         if days_late:
             payment["days_late"] = days_late
         repayment_history.append(payment)
     
-    # Generate email and phone
     email_name = name.lower().replace(" ", ".")
     email_domain = random.choice(EMAIL_DOMAINS)
     email = f"{email_name}@{email_domain}"
     
-    # Generate realistic phone based on country
     country_codes = {
-        "Nigeria": "234", "Kenya": "254", "Ghana": "233",
-        "South Africa": "27", "Egypt": "20", "India": "91",
-        "Brazil": "55", "Mexico": "52", "Philippines": "63", "Thailand": "66"
+        "Nigeria": "234", "Kenya": "254", "Ghana": "233", "South Africa": "27", 
+        "Egypt": "20", "India": "91", "Brazil": "55", "Mexico": "52", 
+        "Philippines": "63", "Thailand": "66"
     }
     country_code = country_codes.get(location["country"], "234")
     phone = f"+{country_code} {random.randint(700, 799)} {random.randint(100, 999)} {random.randint(1000, 9999)}"
@@ -211,40 +184,30 @@ def generate_profile_from_name(name: str) -> Dict:
     }
 
 def get_or_create_applicant(identifier) -> Dict:
-    """
-    Get applicant by ID or name, create if doesn't exist
-    """
-    # Try to get by ID first
+    """Get applicant by ID or name, create if doesn't exist"""
     if isinstance(identifier, int):
         if identifier in APPLICANTS_DB:
             return APPLICANTS_DB[identifier]
-        # ID not found, return None
         return None
     
-    # Search by name (case-insensitive)
     name_lower = str(identifier).lower().strip()
-    
-    # Search existing applicants
     for app in APPLICANTS_DB.values():
         if app["name"].lower() == name_lower:
             return app
     
-    # Not found - generate new profile dynamically
-    # Title case the name
     proper_name = identifier.strip().title()
     new_profile = generate_profile_from_name(proper_name)
-    
-    # Store in database
     APPLICANTS_DB[new_profile["id"]] = new_profile
-    
     return new_profile
+
+# === SAMPLE DATABASE ===
 
 APPLICANTS_DB = {
     1: {
         "id": 1,
         "name": "Chidi Okonkwo",
         "phone": "+234 801 234 5678",
-        "email": "chidi.okonkwo@email.com",
+        "email": "chidi.okonkwo@gmail.com",
         "occupation": "Shop Owner",
         "location": {
             "city": "Lagos",
@@ -283,7 +246,7 @@ APPLICANTS_DB = {
         "id": 2,
         "name": "Amina Hassan",
         "phone": "+254 712 345 678",
-        "email": "amina.hassan@email.com",
+        "email": "amina.hassan@yahoo.com",
         "occupation": "Market Vendor",
         "location": {
             "city": "Nairobi",
@@ -320,7 +283,7 @@ APPLICANTS_DB = {
         "id": 3,
         "name": "Kwame Boateng",
         "phone": "+233 24 567 8901",
-        "email": "kwame.b@email.com",
+        "email": "kwame.b@outlook.com",
         "occupation": "Taxi Driver",
         "location": {
             "city": "Accra",
@@ -366,30 +329,20 @@ async def serve_dashboard():
             return f.read()
     
     return """
-    <html>
-        <body style="font-family: Arial; padding: 40px; text-align: center;">
-            <h1>⚠️ Dashboard file not found</h1>
-            <p>Please upload dashboard.html to your repository</p>
-            <p><a href="/docs">View API Documentation</a></p>
-        </body>
-    </html>
+    <html><body style="font-family: Arial; padding: 40px; text-align: center;">
+    <h1>Dashboard Missing</h1>
+    <p>Upload dashboard.html to your repository</p>
+    <p><a href="/docs">View API Documentation</a></p>
+    </body></html>
     """
 
 @app.get("/api/applicants")
-async def get_all_applicants(
-    risk_level: Optional[str] = None,
-    limit: int = 100
-):
-    """
-    Get all applicants with their ApexScore
-    Returns: List of applicants with basic info
-    """
+async def get_all_applicants(risk_level: Optional[str] = None, limit: int = 100):
+    """Get all applicants with their ApexScore"""
     applicants = []
-    
     for app_id, app_data in list(APPLICANTS_DB.items())[:limit]:
         if risk_level and app_data["risk_level"] != risk_level:
             continue
-            
         applicants.append({
             "id": app_data["id"],
             "name": app_data["name"],
@@ -399,29 +352,17 @@ async def get_all_applicants(
             "risk_level": app_data["risk_level"],
             "outstanding_debt": f"{app_data['tfd']['currency']} {app_data['tfd']['outstanding_debt']:,.0f}"
         })
-    
-    return {
-        "total": len(applicants),
-        "applicants": applicants
-    }
+    return {"total": len(applicants), "applicants": applicants}
 
 @app.get("/api/applicant/{applicant_id}")
 async def get_applicant_detail(applicant_id: int):
-    """
-    Get complete applicant profile by ID
-    """
+    """Get complete applicant profile by ID"""
     app_data = get_or_create_applicant(applicant_id)
-    
     if not app_data:
         raise HTTPException(status_code=404, detail=f"Applicant {applicant_id} not found")
     
-    # Generate action recommendation
     has_default = app_data.get("has_default", False)
-    action_recommendation = generate_action_recommendation(
-        app_data["apex_score"], 
-        app_data["bsi"], 
-        has_default
-    )
+    action_recommendation = generate_action_recommendation(app_data["apex_score"], app_data["bsi"], has_default)
     
     return {
         **app_data,
@@ -432,40 +373,25 @@ async def get_applicant_detail(applicant_id: int):
 
 @app.get("/api/search")
 async def search_applicant(name: str):
-    """
-    Search for applicant by name
-    If not found, creates a new profile dynamically
-    """
+    """Search for applicant by name - creates if doesn't exist"""
     if not name or len(name.strip()) < 2:
         raise HTTPException(status_code=400, detail="Name must be at least 2 characters")
     
-    # Get or create applicant
     app_data = get_or_create_applicant(name)
-    
-    # Generate action recommendation
     has_default = app_data.get("has_default", False)
-    action_recommendation = generate_action_recommendation(
-        app_data["apex_score"], 
-        app_data["bsi"], 
-        has_default
-    )
+    action_recommendation = generate_action_recommendation(app_data["apex_score"], app_data["bsi"], has_default)
     
     return {
         **app_data,
         "action_recommendation": action_recommendation,
         "calculation_timestamp": datetime.now().isoformat(),
         "model_version": "1.0",
-        "is_new": app_data["id"] not in [1, 2, 3]  # Flag if newly generated
+        "is_new": app_data["id"] not in [1, 2, 3]
     }
 
 @app.post("/api/calculate-score")
 async def calculate_apex_score(bsi: BehavioralStabilityIndicators):
-    """
-    Calculate ApexScore from BSI inputs
-    Score range: 0-100 (100 = lowest risk)
-    Performance: < 500ms
-    """
-    # Weighted calculation
+    """Calculate ApexScore from BSI inputs"""
     score = (
         bsi.location_consistency * 0.30 +
         bsi.ip_vs_address * 0.20 +
@@ -473,13 +399,10 @@ async def calculate_apex_score(bsi: BehavioralStabilityIndicators):
         bsi.sim_changes * 0.15 +
         (100 - bsi.travel_frequency) * 0.15
     )
-    
     apex_score = round(score)
-    risk_level = determine_risk_level(apex_score)
-    
     return {
         "apex_score": apex_score,
-        "risk_level": risk_level,
+        "risk_level": determine_risk_level(apex_score),
         "calculation_time_ms": "<500ms",
         "model_version": "1.0",
         "timestamp": datetime.now().isoformat()
@@ -487,12 +410,8 @@ async def calculate_apex_score(bsi: BehavioralStabilityIndicators):
 
 @app.get("/api/high-risk")
 async def get_high_risk_applicants(threshold: int = 40):
-    """
-    Get applicants flagged as high risk
-    Default threshold: ApexScore < 40
-    """
+    """Get applicants flagged as high risk"""
     high_risk = []
-    
     for app_id, app_data in APPLICANTS_DB.items():
         if app_data["apex_score"] < threshold:
             high_risk.append({
@@ -504,7 +423,6 @@ async def get_high_risk_applicants(threshold: int = 40):
                 "has_default": app_data.get("has_default", False),
                 "urgency": "CRITICAL" if app_data.get("has_default") else "HIGH"
             })
-    
     return {
         "threshold": threshold,
         "high_risk_count": len(high_risk),
@@ -517,12 +435,10 @@ async def get_system_statistics():
     total = len(APPLICANTS_DB)
     risk_counts = {"High": 0, "Medium": 0, "Low": 0}
     defaults = 0
-    
     for app_data in APPLICANTS_DB.values():
         risk_counts[app_data["risk_level"]] += 1
         if app_data.get("has_default", False):
             defaults += 1
-    
     return {
         "total_applicants": total,
         "risk_distribution": risk_counts,
@@ -542,7 +458,6 @@ async def health_check():
 # === HELPER FUNCTIONS ===
 
 def determine_risk_level(score: int) -> str:
-    """Determine risk category from ApexScore"""
     if score >= 75:
         return "Low"
     elif score >= 50:
@@ -551,23 +466,34 @@ def determine_risk_level(score: int) -> str:
         return "High"
 
 def generate_action_recommendation(score: int, bsi: Dict, has_default: bool) -> Dict:
-    """Generate action recommendation based on ApexScore and BSI"""
     if score < 40:
-        # High risk for default
         if bsi["location_consistency"] > 70 and bsi["device_stability"] > 70:
             return {
                 "action_type": "CONTACT_VIA_REGISTERED_CHANNELS",
                 "priority": "HIGH",
-                "recommendation": "High BSI: Stable Location & Device. Contact via registered address/device recommended.",
-                "rationale": f"Location: {bsi['location_consistency']}/100, Device: {bsi['device_stability']}/100",
-                "next_steps": [
-                    "Send registered mail to declared address",
-                    "Contact via primary phone number",
-                    "Email to registered email",
-                    "Schedule in-person visit if no response within 7 days"
-                ]
+                "recommendation": "High BSI: Stable Location & Device. Contact via registered address/device.",
+                "rationale": f"Location: {bsi['location_consistency']}/100, Device: {bsi['device_stability']}/100"
             }
         else:
             return {
                 "action_type": "LEGAL_ESCALATION",
-                "pri
+                "priority": "CRITICAL",
+                "recommendation": "Low BSI: Unstable patterns. Legal escalation recommended.",
+                "rationale": f"Location: {bsi['location_consistency']}/100, SIM: {bsi['sim_changes']}/100"
+            }
+    elif score < 75:
+        return {
+            "action_type": "ENHANCED_MONITORING",
+            "priority": "MEDIUM",
+            "recommendation": "Medium risk. Approve with enhanced monitoring."
+        }
+    else:
+        return {
+            "action_type": "STANDARD_APPROVAL",
+            "priority": "LOW",
+            "recommendation": "Low risk. Standard approval and monitoring."
+        }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
