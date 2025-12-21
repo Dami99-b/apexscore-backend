@@ -12,76 +12,79 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: #f5f7fa;
-            min-height: 100vh;
+            color: #333;
         }
 
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 25px 40px;
+            padding: 20px 30px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .header h1 {
-            font-size: 1.8em;
+            font-size: 24px;
             margin-bottom: 5px;
         }
 
         .header p {
             opacity: 0.9;
-            font-size: 0.95em;
+            font-size: 14px;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 30px 40px;
+            padding: 20px;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
         }
 
         .stat-card {
             background: white;
-            padding: 25px;
-            border-radius: 12px;
+            padding: 20px;
+            border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
 
         .stat-card h3 {
             color: #666;
-            font-size: 0.85em;
+            font-size: 12px;
             font-weight: 600;
             text-transform: uppercase;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .stat-card .value {
-            font-size: 2em;
+            font-size: 32px;
             font-weight: bold;
             color: #333;
         }
 
         .main-grid {
             display: grid;
-            grid-template-columns: 400px 1fr;
-            gap: 30px;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
         }
 
-        .applicants-panel {
+        @media (max-width: 968px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
             background: white;
-            border-radius: 12px;
+            border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            height: calc(100vh - 280px);
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
         }
 
         .panel-header {
@@ -90,9 +93,8 @@
         }
 
         .panel-header h2 {
-            color: #333;
-            font-size: 1.3em;
-            margin-bottom: 10px;
+            font-size: 18px;
+            margin-bottom: 12px;
         }
 
         .search-box {
@@ -100,7 +102,7 @@
             padding: 10px 15px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
-            font-size: 0.95em;
+            font-size: 14px;
         }
 
         .search-box:focus {
@@ -109,7 +111,7 @@
         }
 
         .applicants-list {
-            flex: 1;
+            max-height: calc(100vh - 350px);
             overflow-y: auto;
             padding: 15px;
         }
@@ -121,12 +123,12 @@
             border-radius: 8px;
             border-left: 4px solid #e0e0e0;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
         }
 
         .applicant-item:hover {
             background: #f3f4f6;
-            transform: translateX(5px);
+            transform: translateX(3px);
         }
 
         .applicant-item.active {
@@ -134,60 +136,38 @@
             border-left-color: #667eea;
         }
 
-        .applicant-item.high-risk {
-            border-left-color: #ef4444;
-        }
-
-        .applicant-item.medium-risk {
-            border-left-color: #f59e0b;
-        }
-
-        .applicant-item.low-risk {
-            border-left-color: #10b981;
-        }
+        .risk-high { border-left-color: #ef4444 !important; }
+        .risk-medium { border-left-color: #f59e0b !important; }
+        .risk-low { border-left-color: #10b981 !important; }
 
         .applicant-name {
             font-weight: 600;
-            color: #333;
-            margin-bottom: 5px;
+            font-size: 15px;
+            margin-bottom: 4px;
         }
 
         .applicant-meta {
-            font-size: 0.85em;
+            font-size: 13px;
             color: #666;
         }
 
         .score-badge {
             display: inline-block;
-            padding: 3px 10px;
+            padding: 4px 10px;
             border-radius: 12px;
-            font-size: 0.8em;
+            font-size: 12px;
             font-weight: bold;
             margin-top: 8px;
         }
 
-        .score-badge.high {
-            background: #d1fae5;
-            color: #059669;
-        }
-
-        .score-badge.medium {
-            background: #fef3c7;
-            color: #d97706;
-        }
-
-        .score-badge.low {
-            background: #fee2e2;
-            color: #dc2626;
-        }
+        .badge-high { background: #d1fae5; color: #059669; }
+        .badge-medium { background: #fef3c7; color: #d97706; }
+        .badge-low { background: #fee2e2; color: #dc2626; }
 
         .detail-panel {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            height: calc(100vh - 280px);
+            padding: 25px;
+            max-height: calc(100vh - 250px);
             overflow-y: auto;
-            padding: 30px;
         }
 
         .empty-state {
@@ -196,118 +176,103 @@
             color: #999;
         }
 
-        .empty-state svg {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 20px;
-            opacity: 0.3;
-        }
-
         .apex-score-display {
             text-align: center;
-            padding: 40px;
+            padding: 30px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
+            border-radius: 10px;
             color: white;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             cursor: pointer;
-            transition: transform 0.3s;
-        }
-
-        .apex-score-display:hover {
-            transform: scale(1.02);
         }
 
         .apex-score-value {
-            font-size: 4em;
+            font-size: 56px;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
         .apex-score-label {
-            font-size: 1.1em;
+            font-size: 14px;
             opacity: 0.9;
         }
 
         .section {
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
         .section-title {
-            font-size: 1.2em;
+            font-size: 16px;
             font-weight: 600;
-            color: #333;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
             border-bottom: 2px solid #f0f0f0;
         }
 
         .info-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
         }
 
         .info-item {
-            padding: 15px;
+            padding: 12px;
             background: #f9fafb;
-            border-radius: 8px;
+            border-radius: 6px;
         }
 
         .info-label {
-            font-size: 0.85em;
+            font-size: 12px;
             color: #666;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
         .info-value {
             font-weight: 600;
             color: #333;
+            font-size: 14px;
         }
 
         .bsi-breakdown {
             display: none;
             background: #f9fafb;
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
-            margin-top: 20px;
+            margin-top: 15px;
         }
 
-        .bsi-breakdown.active {
-            display: block;
-        }
+        .bsi-breakdown.active { display: block; }
 
         .bsi-item {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            margin-bottom: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
             background: white;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
         }
 
         .bsi-label {
             font-weight: 600;
-            color: #333;
+            font-size: 14px;
         }
 
         .bsi-score {
-            font-size: 1.3em;
+            font-size: 18px;
             font-weight: bold;
             color: #667eea;
         }
 
         .timeline {
             position: relative;
-            padding-left: 30px;
+            padding-left: 25px;
         }
 
         .timeline::before {
             content: '';
             position: absolute;
-            left: 10px;
+            left: 8px;
             top: 0;
             bottom: 0;
             width: 2px;
@@ -316,47 +281,43 @@
 
         .timeline-item {
             position: relative;
-            padding: 15px 0;
+            padding: 12px 0;
         }
 
         .timeline-item::before {
             content: '';
             position: absolute;
-            left: -24px;
-            top: 20px;
-            width: 12px;
-            height: 12px;
+            left: -21px;
+            top: 15px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             background: white;
             border: 3px solid #667eea;
         }
 
-        .timeline-item.late::before {
-            border-color: #f59e0b;
-        }
-
-        .timeline-item.default::before {
-            border-color: #ef4444;
-        }
-
-        .timeline-date {
-            font-size: 0.85em;
-            color: #666;
-            margin-bottom: 5px;
-        }
+        .timeline-item.late::before { border-color: #f59e0b; }
+        .timeline-item.default::before { border-color: #ef4444; }
 
         .timeline-content {
             background: #f9fafb;
-            padding: 12px;
+            padding: 10px;
             border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .timeline-date {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
         }
 
         .action-box {
             background: #fef3c7;
             border-left: 4px solid #f59e0b;
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
-            margin-top: 20px;
+            margin-top: 15px;
         }
 
         .action-box.high-risk {
@@ -365,280 +326,308 @@
         }
 
         .action-box h3 {
+            font-size: 15px;
+            margin-bottom: 8px;
             color: #d97706;
-            margin-bottom: 10px;
         }
 
-        .action-box.high-risk h3 {
+        .action-box.high-risk h3 { color: #dc2626; }
+
+        .action-box p {
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error-message {
+            background: #fee2e2;
             color: #dc2626;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px;
         }
 
         #map {
             width: 100%;
             height: 300px;
+            background: #f3f4f6;
             border-radius: 8px;
-            margin-top: 15px;
+            margin-top: 10px;
+            border: 1px solid #e0e0e0;
         }
 
-        @media (max-width: 1200px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .applicants-panel {
-                height: 400px;
-            }
+        .export-btn {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: all 0.3s;
+        }
+
+        .export-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 15px;
+            background: #f3f4f6;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .filter-btn:hover {
+            border-color: #667eea;
         }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>🎯 ApexScore Risk Analyst Dashboard</h1>
-        <p>AI-Powered Loan Risk Assessment & Default Management</p>
+        <p>AI-Powered Loan Risk Assessment System</p>
     </div>
 
     <div class="container">
         <div class="stats-grid">
             <div class="stat-card">
                 <h3>Total Applicants</h3>
-                <div class="value" id="totalApplicants">0</div>
+                <div class="value" id="totalApplicants">-</div>
             </div>
             <div class="stat-card">
                 <h3>High Risk</h3>
-                <div class="value" style="color: #ef4444;" id="highRisk">0</div>
+                <div class="value" style="color: #ef4444;" id="highRisk">-</div>
             </div>
             <div class="stat-card">
-                <h3>Pending Review</h3>
-                <div class="value" style="color: #f59e0b;" id="mediumRisk">0</div>
+                <h3>Medium Risk</h3>
+                <div class="value" style="color: #f59e0b;" id="mediumRisk">-</div>
             </div>
             <div class="stat-card">
                 <h3>Low Risk</h3>
-                <div class="value" style="color: #10b981;" id="lowRisk">0</div>
+                <div class="value" style="color: #10b981;" id="lowRisk">-</div>
             </div>
         </div>
 
+        <div class="filters">
+            <button class="filter-btn active" onclick="filterRisk('all')">All Applicants</button>
+            <button class="filter-btn" onclick="filterRisk('High')">High Risk Only</button>
+            <button class="filter-btn" onclick="filterRisk('Medium')">Medium Risk Only</button>
+            <button class="filter-btn" onclick="filterRisk('Low')">Low Risk Only</button>
+            <button class="export-btn" onclick="exportToCSV()">📊 Export CSV</button>
+            <button class="export-btn" onclick="printReport()">🖨️ Print Report</button>
+        </div>
+
         <div class="main-grid">
-            <!-- Applicants List -->
-            <div class="applicants-panel">
+            <div class="panel">
                 <div class="panel-header">
-                    <h2>Loan Applicants</h2>
-                    <input type="text" class="search-box" placeholder="Search by name, location..." id="searchBox">
+                    <h2>Applicants</h2>
+                    <input type="text" class="search-box" placeholder="Search or add new applicant..." id="searchBox">
+                    <button onclick="searchApplicant()" style="width: 100%; margin-top: 10px; padding: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        Search / Add Applicant
+                    </button>
                 </div>
                 <div class="applicants-list" id="applicantsList">
-                    <!-- Populated by JS -->
+                    <div class="loading">Loading applicants...</div>
                 </div>
             </div>
 
-            <!-- Detail Panel -->
-            <div class="detail-panel" id="detailPanel">
-                <div class="empty-state">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <h3>Select an applicant to view details</h3>
-                    <p>Click on any applicant from the list to see their full risk profile</p>
+            <div class="panel">
+                <div class="detail-panel" id="detailPanel">
+                    <div class="empty-state">
+                        <h3>Select an applicant</h3>
+                        <p>Click on any applicant from the list to view their risk profile</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Sample data matching PRD requirements
-        const applicants = [
-            {
-                id: 1,
-                name: "Chidi Okonkwo",
-                phone: "+234 801 234 5678",
-                email: "chidi.okonkwo@email.com",
-                occupation: "Shop Owner",
-                location: {
-                    city: "Lagos",
-                    country: "Nigeria",
-                    region: "West Africa",
-                    address: "45 Broad Street, Lagos Island",
-                    coordinates: {lat: 6.4541, lng: 3.3947}
-                },
-                tfd: {
-                    loanHistory: [
-                        {institution: "FirstBank Nigeria", amount: 500000, date: "2022-03"},
-                        {institution: "Access Bank", amount: 750000, date: "2023-06"},
-                        {institution: "Zenith Bank", amount: 450000, date: "2024-01"}
-                    ],
-                    outstandingDebt: 1200000,
-                    currency: "NGN",
-                    repaymentHistory: [
-                        {date: "2024-11", status: "on-time", amount: 50000},
-                        {date: "2024-10", status: "on-time", amount: 50000},
-                        {date: "2024-09", status: "on-time", amount: 50000},
-                        {date: "2024-08", status: "late", amount: 50000, daysLate: 5},
-                        {date: "2024-07", status: "on-time", amount: 50000}
-                    ]
-                },
-                bsi: {
-                    locationConsistency: 92,
-                    ipVsAddress: 88,
-                    deviceStability: 90,
-                    simChanges: 95,
-                    travelFrequency: 25
-                },
-                apexScore: 89,
-                riskLevel: "Low"
-            },
-            {
-                id: 2,
-                name: "Amina Hassan",
-                phone: "+254 712 345 678",
-                email: "amina.hassan@email.com",
-                occupation: "Market Vendor",
-                location: {
-                    city: "Nairobi",
-                    country: "Kenya",
-                    region: "East Africa",
-                    address: "Gikomba Market, Nairobi",
-                    coordinates: {lat: -1.2864, lng: 36.8344}
-                },
-                tfd: {
-                    loanHistory: [
-                        {institution: "Kenya Commercial Bank", amount: 150000, date: "2023-08"},
-                        {institution: "M-Pesa Fuliza", amount: 50000, date: "2024-03"}
-                    ],
-                    outstandingDebt: 180000,
-                    currency: "KES",
-                    repaymentHistory: [
-                        {date: "2024-11", status: "late", amount: 15000, daysLate: 12},
-                        {date: "2024-10", status: "on-time", amount: 15000},
-                        {date: "2024-09", status: "late", amount: 15000, daysLate: 8},
-                        {date: "2024-08", status: "on-time", amount: 15000}
-                    ]
-                },
-                bsi: {
-                    locationConsistency: 78,
-                    ipVsAddress: 65,
-                    deviceStability: 72,
-                    simChanges: 58,
-                    travelFrequency: 45
-                },
-                apexScore: 68,
-                riskLevel: "Medium"
-            },
-            {
-                id: 3,
-                name: "Kwame Boateng",
-                phone: "+233 24 567 8901",
-                email: "kwame.b@email.com",
-                occupation: "Taxi Driver",
-                location: {
-                    city: "Accra",
-                    country: "Ghana",
-                    region: "West Africa",
-                    address: "Osu, Greater Accra",
-                    coordinates: {lat: 5.5557, lng: -0.1963}
-                },
-                tfd: {
-                    loanHistory: [
-                        {institution: "Barclays Ghana", amount: 20000, date: "2022-01"},
-                        {institution: "Ecobank Ghana", amount: 35000, date: "2023-04"},
-                        {institution: "GCB Bank", amount: 28000, date: "2023-11"}
-                    ],
-                    outstandingDebt: 65000,
-                    currency: "GHS",
-                    repaymentHistory: [
-                        {date: "2024-11", status: "default", amount: 5000},
-                        {date: "2024-10", status: "default", amount: 5000},
-                        {date: "2024-09", status: "late", amount: 5000, daysLate: 30},
-                        {date: "2024-08", status: "late", amount: 5000, daysLate: 15}
-                    ]
-                },
-                bsi: {
-                    locationConsistency: 42,
-                    ipVsAddress: 38,
-                    deviceStability: 45,
-                    simChanges: 35,
-                    travelFrequency: 78
-                },
-                apexScore: 35,
-                riskLevel: "High",
-                hasDefault: true
+        const API_BASE = window.location.origin;
+        let applicants = [];
+        let selectedId = null;
+
+        async function init() {
+            try {
+                await loadApplicants();
+                updateStats();
+            } catch (error) {
+                console.error('Init error:', error);
+                showError('Failed to load data. Please refresh the page.');
             }
-        ];
-
-        let selectedApplicant = null;
-
-        function init() {
-            loadApplicants();
-            updateStats();
         }
 
-        function updateStats() {
-            let high = 0, medium = 0, low = 0;
-            applicants.forEach(app => {
-                if (app.riskLevel === "High") high++;
-                else if (app.riskLevel === "Medium") medium++;
-                else low++;
-            });
-
-            document.getElementById('totalApplicants').textContent = applicants.length;
-            document.getElementById('highRisk').textContent = high;
-            document.getElementById('mediumRisk').textContent = medium;
-            document.getElementById('lowRisk').textContent = low;
+        async function loadApplicants() {
+            try {
+                const response = await fetch(`${API_BASE}/api/applicants`);
+                if (!response.ok) throw new Error('Failed to fetch applicants');
+                
+                const data = await response.json();
+                applicants = data.applicants || [];
+                
+                renderApplicants();
+            } catch (error) {
+                console.error('Load error:', error);
+                document.getElementById('applicantsList').innerHTML = 
+                    '<div class="error-message">Failed to load applicants. Check console for details.</div>';
+            }
         }
 
-        function loadApplicants() {
+        function renderApplicants() {
             const list = document.getElementById('applicantsList');
+            
+            if (applicants.length === 0) {
+                list.innerHTML = '<div class="loading">No applicants found</div>';
+                return;
+            }
+
             list.innerHTML = applicants.map(app => `
-                <div class="applicant-item ${app.riskLevel.toLowerCase()}-risk" onclick="selectApplicant(${app.id})">
+                <div class="applicant-item risk-${app.risk_level.toLowerCase()}" 
+                     data-id="${app.id}" 
+                     onclick="selectApplicant(${app.id})">
                     <div class="applicant-name">${app.name}</div>
-                    <div class="applicant-meta">
-                        ${app.location.city}, ${app.location.country} • ${app.occupation}
-                    </div>
-                    <span class="score-badge ${app.riskLevel.toLowerCase()}">
-                        ApexScore: ${app.apexScore} • ${app.riskLevel} Risk
+                    <div class="applicant-meta">${app.location} • ${app.occupation}</div>
+                    <span class="score-badge badge-${app.risk_level.toLowerCase()}">
+                        Score: ${app.apex_score} • ${app.risk_level} Risk
                     </span>
                 </div>
             `).join('');
         }
 
-        function selectApplicant(id) {
-            selectedApplicant = applicants.find(a => a.id === id);
-            document.querySelectorAll('.applicant-item').forEach(el => el.classList.remove('active'));
-            event.target.closest('.applicant-item').classList.add('active');
-            displayApplicantDetail(selectedApplicant);
+        function updateStats() {
+            const counts = { High: 0, Medium: 0, Low: 0 };
+            applicants.forEach(app => counts[app.risk_level]++);
+
+            document.getElementById('totalApplicants').textContent = applicants.length;
+            document.getElementById('highRisk').textContent = counts.High;
+            document.getElementById('mediumRisk').textContent = counts.Medium;
+            document.getElementById('lowRisk').textContent = counts.Low;
         }
 
-        function displayApplicantDetail(app) {
-            const panel = document.getElementById('detailPanel');
+        async function selectApplicant(id) {
+            selectedId = id;
             
-            const hasDefault = app.tfd.repaymentHistory.some(r => r.status === 'default');
-            const actionMessage = getActionRecommendation(app.apexScore, app.bsi, hasDefault);
+            document.querySelectorAll('.applicant-item').forEach(el => el.classList.remove('active'));
+            document.querySelector(`[data-id="${id}"]`)?.classList.add('active');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/applicant/${id}`);
+                if (!response.ok) throw new Error('Failed to fetch applicant details');
+                
+                const app = await response.json();
+                renderDetail(app);
+            } catch (error) {
+                console.error('Detail error:', error);
+                showError('Failed to load applicant details');
+            }
+        }
+
+        function renderDetail(app) {
+            const panel = document.getElementById('detailPanel');
+            const hasDefault = app.has_default || false;
             
             panel.innerHTML = `
                 <div class="apex-score-display" onclick="toggleBSI()">
-                    <div class="apex-score-value">${app.apexScore}</div>
+                    <div class="apex-score-value">${app.apex_score}</div>
                     <div class="apex-score-label">ApexScore (Click for BSI Breakdown)</div>
                 </div>
 
                 <div class="bsi-breakdown" id="bsiBreakdown">
-                    <h3 style="margin-bottom: 15px; color: #667eea;">Behavioral Stability Indicators (BSI)</h3>
-                    <div class="bsi-item">
-                        <div>
-                            <div class="bsi-label">BSI-1: Location Consistency</div>
-                            <div style="font-size: 0.85em; color: #666;">Same city/region stability</div>
+                    <h3 style="margin-bottom: 12px; color: #667eea; font-size: 15px;">BSI Breakdown</h3>
+                    ${renderBSI(app.bsi)}
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Personal Information</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Name</div>
+                            <div class="info-value">${app.name}</div>
                         </div>
-                        <div class="bsi-score">${app.bsi.locationConsistency}/100</div>
-                    </div>
-                    <div class="bsi-item">
-                        <div>
-                            <div class="bsi-label">BSI-2: IP vs Declared Address</div>
-                            <div style="font-size: 0.85em; color: #666;">Device IP region match</div>
+                        <div class="info-item">
+                            <div class="info-label">Phone</div>
+                            <div class="info-value">${app.phone}</div>
                         </div>
-                        <div class="bsi-score">${app.bsi.ipVsAddress}/100</div>
-                    </div>
-                    <div class="bsi-item">
-                        <div>
-                            <div class="bsi-label">BSI-3: Device Stability</div>
-                            <div style="font-size: 0.85em; color: #666;">Hardware/browser consistency</div>
+                        <div class="info-item">
+                            <div class="info-label">Email</div>
+                            <div class="info-value">${app.email}</div>
                         </div>
-                        <div class="bsi-score">${app.bsi.deviceStability}/100</div>
+                        <div class="info-item">
+                            <div class="info-label">Occupation</div>
+                            <div class="info-value">${app.occupation}</div>
+                        </div>
                     </div>
-                    <div class="bsi-item">
-             
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Location</div>
+                    <div class="info-item">
+                        <div class="info-label">Address</div>
+                        <div class="info-value">${app.location.address}</div>
+                        <div style="margin-top: 4px; font-size: 13px; color: #666;">
+                            ${app.location.city}, ${app.location.country}
+                        </div>
+                    </div>
+                    <div id="map"></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Financial Data (TFD)</div>
+                    <div class="info-item" style="margin-bottom: 12px;">
+                        <div class="info-label">Outstanding Debt (TFD-2)</div>
+                        <div class="info-value" style="color: #ef4444; font-size: 18px;">
+                            ${app.tfd.currency} ${app.tfd.outstanding_debt.toLocaleString()}
+                        </div>
+                    </div>
+
+                    <div class="info-label" style="margin-bottom: 8px; font-weight: 600;">
+                        Loan History (TFD-1)
+                    </div>
+                    ${app.tfd.loan_history.map(loan => `
+                        <div class="info-item" style="margin-bottom: 8px;">
+                            <div style="font-weight: 600; font-size: 14px;">${loan.institution}</div>
+                            <div style="color: #666; font-size: 13px;">
+                                ${app.tfd.currency} ${loan.amount.toLocaleString()} • ${loan.date}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Repayment History (TFD-3)</div>
+                    <div class="timeline">
+                        ${app.tfd.repayment_history.map(payment => `
+                            <div class="timeline-item ${payment.status}">
+                                <div class="timeline-date">${payment.date}</div>
+                                <div class="timeline-content">
+                                    <strong>${app.tfd.currency} ${payment.amount.toLocaleString()}</strong>
+                                    <span style="color: ${getStatusColor(payment.status)}; margin-left: 8px;">
+                                        ${getStatusIcon(payment.status)} ${formatStatus(payment)}
+                                    </span>
+                                </div>
+        
