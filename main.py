@@ -324,14 +324,35 @@ APPLICANTS_DB = {
 @app.get("/", response_class=HTMLResponse)
 async def serve_dashboard():
     """Serve the risk analyst dashboard"""
-    if os.path.exists('dashboard.html'):
-        with open('dashboard.html', 'r', encoding='utf-8') as f:
-            return f.read()
+    dashboard_path = 'dashboard.html'
     
-    return """
-    <html><body style="font-family: Arial; padding: 40px; text-align: center;">
-    <h1>Dashboard Missing</h1>
-    <p>Upload dashboard.html to your repository</p>
+    # Debug: Check if file exists
+    file_exists = os.path.exists(dashboard_path)
+    print(f"Dashboard file exists: {file_exists}")
+    print(f"Current directory: {os.getcwd()}")
+    print(f"Files in directory: {os.listdir('.')}")
+    
+    if file_exists:
+        try:
+            with open(dashboard_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                print(f"Dashboard loaded successfully, size: {len(content)} bytes")
+                return content
+        except Exception as e:
+            print(f"Error reading dashboard: {e}")
+            return f"""
+            <html><body style="font-family: Arial; padding: 40px;">
+            <h1>Error Loading Dashboard</h1>
+            <p>Error: {str(e)}</p>
+            <p><a href="/docs">View API Documentation</a></p>
+            </body></html>
+            """
+    
+    return f"""
+    <html><body style="font-family: Arial; padding: 40px;">
+    <h1>Dashboard File Not Found</h1>
+    <p>Current directory: {os.getcwd()}</p>
+    <p>Files: {', '.join(os.listdir('.'))}</p>
     <p><a href="/docs">View API Documentation</a></p>
     </body></html>
     """
