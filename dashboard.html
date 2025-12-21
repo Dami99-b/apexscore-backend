@@ -446,10 +446,13 @@
             <div class="panel">
                 <div class="panel-header">
                     <h2>Applicants</h2>
-                    <input type="text" class="search-box" placeholder="Search or add new applicant..." id="searchBox">
-                    <button onclick="searchApplicant()" style="width: 100%; margin-top: 10px; padding: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                        Search / Add Applicant
+                    <input type="text" class="search-box" placeholder="Type any name and press Enter or click Search..." id="searchBox">
+                    <button id="searchButton" onclick="searchApplicant()" style="width: 100%; margin-top: 10px; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;">
+                        🔍 Search / Add Applicant
                     </button>
+                    <div id="searchHint" style="font-size: 12px; color: #666; margin-top: 8px; text-align: center;">
+                        Try: "Michael Ada", "Sarah Johnson", or any name
+                    </div>
                 </div>
                 <div class="applicants-list" id="applicantsList">
                     <div class="loading">Loading applicants...</div>
@@ -472,10 +475,14 @@
         let applicants = [];
         let selectedId = null;
 
+        console.log('Dashboard loaded. API Base:', API_BASE);
+
         async function init() {
+            console.log('Initializing dashboard...');
             try {
                 await loadApplicants();
                 updateStats();
+                console.log('Dashboard initialized successfully');
             } catch (error) {
                 console.error('Init error:', error);
                 showError('Failed to load data. Please refresh the page.');
@@ -624,10 +631,4 @@
                         ${app.tfd.repayment_history.map(payment => `
                             <div class="timeline-item ${payment.status}">
                                 <div class="timeline-date">${payment.date}</div>
-                                <div class="timeline-content">
-                                    <strong>${app.tfd.currency} ${payment.amount.toLocaleString()}</strong>
-                                    <span style="color: ${getStatusColor(payment.status)}; margin-left: 8px;">
-                                        ${getStatusIcon(payment.status)} ${formatStatus(payment)}
-                                    </span>
-                                </div>
-        
+              
