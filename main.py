@@ -97,11 +97,25 @@ def generate_profile(email: str) -> Dict:
     country = random.choice(list(COUNTRIES.keys()))
     country_data = COUNTRIES[country]
 
-    first_names = ["John", "Ahmed", "Sadiq", "Blessing", "Michael", "Fatima", "Daniel", "Aisha", "Chidi", "Amina"]
-    last_names = ["Okoye", "Smith", "Hassan", "Patel", "Brown", "Adeyemi", "Khan", "Kamau", "Boateng"]
+    # Realistic names
+    first_names = {
+        "Nigeria": ["Chidi", "Amina", "Tunde", "Blessing", "Emeka", "Ngozi", "Oluwaseun", "Chiamaka"],
+        "Kenya": ["Wanjiru", "Otieno", "Akinyi", "Kamau", "Njeri", "Omondi"],
+        "USA": ["Michael", "Sarah", "James", "Emily", "David", "Jessica"],
+        "UK": ["Oliver", "Emma", "Harry", "Sophie", "George", "Charlotte"],
+        "India": ["Rajesh", "Priya", "Amit", "Sneha", "Arjun", "Kavya"]
+    }
+    
+    last_names = {
+        "Nigeria": ["Okonkwo", "Adeyemi", "Nwosu", "Okeke", "Adeleke", "Eze"],
+        "Kenya": ["Kamau", "Onyango", "Mwangi", "Odhiambo", "Wambui"],
+        "USA": ["Smith", "Johnson", "Williams", "Brown", "Davis", "Miller"],
+        "UK": ["Smith", "Jones", "Taylor", "Brown", "Davies", "Wilson"],
+        "India": ["Kumar", "Sharma", "Patel", "Singh", "Reddy", "Gupta"]
+    }
 
-    first = random.choice(first_names)
-    last = random.choice(last_names)
+    first = random.choice(first_names.get(country, first_names["USA"]))
+    last = random.choice(last_names.get(country, last_names["USA"]))
     full_name = f"{first} {last}"
 
     score = random.randint(25, 95)
@@ -212,15 +226,78 @@ async def search_by_email(email: str, request: Request):
     return APPLICANTS_DB[email_lower]
 
 @app.get("/api/applicants")
-async def get_applicants(limit: int = 20):
-    """Get all applicants - auto-generates if needed"""
-    # Auto-generate profiles if database is empty
-    while len(APPLICANTS_DB) < limit:
-        fake_email = f"user{random.randint(10000,99999)}@mail.com"
-        if fake_email not in APPLICANTS_DB:
-            APPLICANTS_DB[fake_email] = generate_profile(fake_email)
-
-    all_applicants = list(APPLICANTS_DB.values())[-limit:]
+async def get_applicants(limit: int = 50):
+    """Get all applicants with realistic emails"""
+    
+    # Generate realistic email addresses if database is small
+    email_templates = [
+        # Gmail addresses
+        "chidi.okonkwo@gmail.com",
+        "amina.hassan@gmail.com",
+        "michael.johnson@gmail.com",
+        "sarah.williams@gmail.com",
+        "rajesh.kumar@gmail.com",
+        "priya.sharma@gmail.com",
+        "tunde.adeyemi@gmail.com",
+        "blessing.okeke@gmail.com",
+        "wanjiru.kamau@gmail.com",
+        "otieno.onyango@gmail.com",
+        # Yahoo addresses
+        "james.brown@yahoo.com",
+        "emily.davis@yahoo.com",
+        "david.miller@yahoo.com",
+        "jessica.wilson@yahoo.com",
+        # Outlook addresses
+        "oliver.smith@outlook.com",
+        "emma.jones@outlook.com",
+        "harry.taylor@outlook.com",
+        "sophie.davies@outlook.com",
+        # Hotmail
+        "ngozi.nwosu@hotmail.com",
+        "emeka.eze@hotmail.com",
+        "oluwaseun.adeleke@hotmail.com",
+        # iCloud
+        "george.brown@icloud.com",
+        "charlotte.wilson@icloud.com",
+        # Professional domains
+        "amit.patel@protonmail.com",
+        "sneha.reddy@protonmail.com",
+        "arjun.singh@protonmail.com",
+        "kavya.gupta@protonmail.com",
+        "chiamaka.nnamdi@gmail.com",
+        "njeri.wambui@gmail.com",
+        "kamau.mwangi@gmail.com",
+        "akinyi.odhiambo@gmail.com",
+        # Additional realistic emails
+        "john.smith123@gmail.com",
+        "mary.johnson45@yahoo.com",
+        "robert.williams78@outlook.com",
+        "linda.brown21@gmail.com",
+        "william.jones89@hotmail.com",
+        "elizabeth.taylor34@icloud.com",
+        "thomas.davis56@gmail.com",
+        "sarah.miller90@yahoo.com",
+        "joseph.anderson12@outlook.com",
+        "jessica.thomas67@gmail.com",
+        "christopher.jackson43@hotmail.com",
+        "ashley.white29@icloud.com",
+        "matthew.harris81@gmail.com",
+        "amanda.martin52@yahoo.com",
+        "daniel.thompson74@outlook.com",
+        "stephanie.garcia36@gmail.com",
+        "joshua.martinez95@hotmail.com",
+        "michelle.rodriguez18@icloud.com"
+    ]
+    
+    # Ensure we have enough profiles
+    while len(APPLICANTS_DB) < min(limit, len(email_templates)):
+        for email in email_templates:
+            if email not in APPLICANTS_DB:
+                APPLICANTS_DB[email] = generate_profile(email)
+            if len(APPLICANTS_DB) >= limit:
+                break
+    
+    all_applicants = list(APPLICANTS_DB.values())[:limit]
     
     return {
         "total": len(all_applicants),
@@ -264,4 +341,4 @@ async def health_check():
         "status": "healthy",
         "applicants_loaded": len(APPLICANTS_DB),
         "timestamp": datetime.utcnow().isoformat()
-        }
+    }
