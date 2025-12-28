@@ -18,34 +18,39 @@ app.add_middleware(
 )
 
 # ======================================================
-# GLOBAL DATA (EXPANDED)
+# GLOBAL DATA
 # ======================================================
 
 COUNTRIES = {
     "Nigeria": {
         "currency": "NGN",
-        "isps": ["MTN", "Airtel", "Glo", "9mobile", "Starlink NG"],
-        "banks": ["GTBank", "Access Bank", "Opay", "Palmpay", "Moniepoint", "Kuda", "FairMoney", "Carbon"]
+        "lat": 6.5244, "lng": 3.3792,
+        "isps": ["MTN", "Airtel", "Glo", "9mobile"],
+        "banks": ["GTBank", "Access Bank", "Opay", "Palmpay", "Kuda"]
     },
     "Kenya": {
         "currency": "KES",
-        "isps": ["Safaricom", "Airtel KE", "Telkom"],
-        "banks": ["KCB", "Equity Bank", "M-Pesa", "NCBA", "Absa KE"]
+        "lat": -1.2921, "lng": 36.8219,
+        "isps": ["Safaricom", "Airtel KE"],
+        "banks": ["KCB", "Equity Bank", "M-Pesa"]
     },
     "USA": {
         "currency": "USD",
-        "isps": ["Verizon", "AT&T", "T-Mobile", "Comcast"],
-        "banks": ["Chase", "Bank of America", "Wells Fargo", "Chime", "Cash App"]
+        "lat": 40.7128, "lng": -74.0060,
+        "isps": ["Verizon", "AT&T", "T-Mobile"],
+        "banks": ["Chase", "Bank of America", "Chime"]
     },
     "UK": {
         "currency": "GBP",
-        "isps": ["Vodafone UK", "O2", "EE", "BT"],
-        "banks": ["HSBC", "Barclays", "Monzo", "Starling", "Lloyds"]
+        "lat": 51.5074, "lng": -0.1278,
+        "isps": ["Vodafone UK", "O2", "EE"],
+        "banks": ["HSBC", "Barclays", "Monzo"]
     },
     "India": {
         "currency": "INR",
-        "isps": ["Reliance Jio", "Airtel IN", "Vodafone Idea"],
-        "banks": ["HDFC", "ICICI", "Paytm", "Axis Bank"]
+        "lat": 19.0760, "lng": 72.8777,
+        "isps": ["Reliance Jio", "Airtel IN"],
+        "banks": ["HDFC", "ICICI", "Paytm"]
     }
 }
 
@@ -53,29 +58,10 @@ OCCUPATIONS = [
     "Market Trader", "Okada Rider", "Taxi Driver", "Bolt Driver",
     "POS Agent", "Bricklayer", "Welder", "Carpenter",
     "Phone Repairer", "Street Food Vendor", "Farmer",
-    "Fisherman", "Tailor", "Laundry Operator",
-    "Sole Proprietor", "Small Shop Owner"
-]
-
-ANDROID_MODELS = [
-    "Tecno Spark 10", "Infinix Hot 30", "Samsung A12", "Samsung A04",
-    "Redmi 9A", "Redmi Note 11", "Itel S23",
-    "Pixel 6", "Pixel 7"
-]
-
-IOS_MODELS = [
-    "iPhone XR", "iPhone 11", "iPhone 12",
-    "iPhone 13", "iPhone 14"
-]
-
-DESKTOP_DEVICES = [
-    "Windows 10 Chrome", "Windows 11 Edge",
-    "macOS Safari", "Ubuntu Firefox"
+    "Fisherman", "Tailor", "Laundry Operator", "Small Shop Owner"
 ]
 
 APPLICANTS_DB: Dict[str, Dict] = {}
-ACTIVITY_LOGS: List[Dict] = []
-DECISION_LOGS: List[Dict] = []
 
 # ======================================================
 # HELPERS
@@ -87,34 +73,19 @@ def seed(value: str):
 def risk_level(score):
     return "Low" if score >= 75 else "Medium" if score >= 50 else "High"
 
-# ======================================================
-# DEVICE INTELLIGENCE
-# ======================================================
-
-def generate_device_profile(email: str, country: str):
-    seed(email + "device")
-
-    device_type = random.choice(["Android", "iOS", "Desktop"])
-
-    if device_type == "Android":
-        model = random.choice(ANDROID_MODELS)
-        os = f"Android {random.randint(9,14)}"
-    elif device_type == "iOS":
-        model = random.choice(IOS_MODELS)
-        os = f"iOS {random.randint(13,17)}"
+def mask_email(email: str) -> str:
+    """Mask email showing only first 2 and last 2 chars before @"""
+    if "@" not in email:
+        return email
+    
+    local, domain = email.split("@")
+    
+    if len(local) <= 4:
+        masked = local[0] + "*" * (len(local) - 1)
     else:
-        model = random.choice(DESKTOP_DEVICES)
-        os = "Desktop"
-
-    return {
-        "device_id": hashlib.md5(email.encode()).hexdigest(),
-        "type": device_type,
-        "model": model,
-        "os_version": os,
-        "is_emulator": random.random() < 0.06,
-        "rooted_or_jailbroken": random.random() < 0.1,
-        "first_seen": datetime.utcnow().isoformat()
-    }
+        masked = local[:2] + "*" * (len(local) - 4) + local[-2:]
+    
+    return f"{masked}@{domain}"
 
 # ======================================================
 # PROFILE GENERATION
@@ -126,92 +97,171 @@ def generate_profile(email: str) -> Dict:
     country = random.choice(list(COUNTRIES.keys()))
     country_data = COUNTRIES[country]
 
-    first_names = ["John", "Ahmed", "Sadiq", "Blessing", "Michael", "Fatima", "Daniel", "Aisha"]
-    last_names = ["Okoye", "Smith", "Hassan", "Patel", "Brown", "Adeyemi", "Khan"]
+    first_names = ["John", "Ahmed", "Sadiq", "Blessing", "Michael", "Fatima", "Daniel", "Aisha", "Chidi", "Amina"]
+    last_names = ["Okoye", "Smith", "Hassan", "Patel", "Brown", "Adeyemi", "Khan", "Kamau", "Boateng"]
 
     first = random.choice(first_names)
     last = random.choice(last_names)
+    full_name = f"{first} {last}"
 
     score = random.randint(25, 95)
     level = risk_level(score)
-
-    device = generate_device_profile(email, country)
-
-    outstanding = random.randint(500, 25000)
+    outstanding = random.randint(5000, 250000)
+    
+    cities = {
+        "Nigeria": ["Lagos", "Abuja", "Port Harcourt"],
+        "Kenya": ["Nairobi", "Mombasa"],
+        "USA": ["New York", "Los Angeles"],
+        "UK": ["London", "Manchester"],
+        "India": ["Mumbai", "Delhi"]
+    }
+    city = random.choice(cities.get(country, ["Capital City"]))
+    
+    # Generate BSI
+    if level == "Low":
+        bsi = {
+            "location_consistency": random.randint(85, 98),
+            "ip_vs_address": random.randint(82, 96),
+            "device_stability": random.randint(88, 99),
+            "sim_changes": random.randint(90, 99),
+            "travel_frequency": random.randint(10, 30)
+        }
+    elif level == "Medium":
+        bsi = {
+            "location_consistency": random.randint(60, 84),
+            "ip_vs_address": random.randint(55, 78),
+            "device_stability": random.randint(60, 85),
+            "sim_changes": random.randint(55, 82),
+            "travel_frequency": random.randint(35, 55)
+        }
+    else:
+        bsi = {
+            "location_consistency": random.randint(25, 59),
+            "ip_vs_address": random.randint(20, 54),
+            "device_stability": random.randint(25, 59),
+            "sim_changes": random.randint(20, 54),
+            "travel_frequency": random.randint(60, 90)
+        }
+    
+    # Generate loan history
+    loan_count = random.randint(1, 4)
+    loan_history = []
+    for i in range(loan_count):
+        year = random.randint(2021, 2024)
+        month = random.randint(1, 12)
+        loan_history.append({
+            "institution": random.choice(country_data["banks"]),
+            "amount": random.randint(10000, 100000),
+            "date": f"{year}-{month:02d}"
+        })
+    
+    # Generate phone
+    phone_codes = {"Nigeria": "+234", "Kenya": "+254", "USA": "+1", "UK": "+44", "India": "+91"}
+    phone = f"{phone_codes.get(country, '+234')} {random.randint(700, 999)} {random.randint(100, 999)} {random.randint(1000, 9999)}"
 
     profile = {
         "id": str(uuid.uuid4()),
         "email": email,
-        "name": {
-            "first": first,
-            "last": last,
-            "full": f"{first} {last}"
-        },
+        "email_masked": mask_email(email),
+        "name": full_name,
+        "phone": phone,
         "country": country,
         "occupation": random.choice(OCCUPATIONS),
-        "financials": {
+        "location": {
+            "city": city,
+            "country": country,
+            "address": f"{random.randint(1, 999)} {random.choice(['Main', 'Market', 'Station'])} Street, {city}",
+            "coordinates": {
+                "lat": country_data["lat"] + random.uniform(-0.5, 0.5),
+                "lng": country_data["lng"] + random.uniform(-0.5, 0.5)
+            }
+        },
+        "tfd": {
             "currency": country_data["currency"],
             "outstanding_debt": outstanding,
-            "bank_accounts": [
-                {
-                    "bank": random.choice(country_data["banks"]),
-                    "account_last_5": str(random.randint(10000, 99999))
-                }
-                for _ in range(random.randint(1, 3))
-            ]
+            "loan_history": loan_history
         },
-        "device_profile": device,
-        "network": {
-            "isp": random.choice(country_data["isps"]),
-            "ip_risk": random.choice(["Low", "Medium", "High"])
-        },
+        "bsi": bsi,
         "apex_score": score,
         "risk_level": level,
+        "action_recommendation": {
+            "recommendation": "Approve with standard monitoring" if score >= 75 
+                             else "Enhanced monitoring required" if score >= 50
+                             else "High risk - Legal escalation recommended"
+        },
         "created_at": datetime.utcnow().isoformat()
     }
 
     return profile
 
 # ======================================================
-# API
+# API ENDPOINTS
 # ======================================================
 
 @app.get("/api/search")
 async def search_by_email(email: str, request: Request):
+    """Search by email - creates profile if doesn't exist"""
     if "@" not in email:
-        raise HTTPException(status_code=400, detail="Invalid email")
+        raise HTTPException(status_code=400, detail="Invalid email format")
 
-    if email not in APPLICANTS_DB:
-        APPLICANTS_DB[email] = generate_profile(email)
+    email_lower = email.lower().strip()
+    
+    if email_lower not in APPLICANTS_DB:
+        APPLICANTS_DB[email_lower] = generate_profile(email_lower)
 
-    profile = APPLICANTS_DB[email]
-
-    ACTIVITY_LOGS.append({
-        "email": email,
-        "ip": request.client.host,
-        "time": datetime.utcnow().isoformat(),
-        "event": "PROFILE_SEARCH"
-    })
-
-    DECISION_LOGS.append({
-        "email": email,
-        "score": profile["apex_score"],
-        "risk": profile["risk_level"],
-        "decision_time": datetime.utcnow().isoformat()
-    })
-
-    return {
-        **profile,
-        "activity_logs_count": len(ACTIVITY_LOGS),
-        "decision_logs_count": len(DECISION_LOGS)
-    }
+    return APPLICANTS_DB[email_lower]
 
 @app.get("/api/applicants")
-async def endless_feed(limit: int = 20):
+async def get_applicants(limit: int = 20):
+    """Get all applicants - auto-generates if needed"""
+    # Auto-generate profiles if database is empty
     while len(APPLICANTS_DB) < limit:
         fake_email = f"user{random.randint(10000,99999)}@mail.com"
-        APPLICANTS_DB[fake_email] = generate_profile(fake_email)
+        if fake_email not in APPLICANTS_DB:
+            APPLICANTS_DB[fake_email] = generate_profile(fake_email)
 
+    all_applicants = list(APPLICANTS_DB.values())[-limit:]
+    
     return {
-        "applicants": list(APPLICANTS_DB.values())[-limit:]
-}
+        "total": len(all_applicants),
+        "applicants": all_applicants
+    }
+
+@app.get("/api/applicant/{applicant_id}")
+async def get_applicant_detail(applicant_id: str):
+    """Get applicant by ID"""
+    for email, profile in APPLICANTS_DB.items():
+        if profile["id"] == applicant_id:
+            return profile
+    
+    raise HTTPException(status_code=404, detail="Applicant not found")
+
+@app.get("/api/stats")
+async def get_statistics():
+    """Get system statistics"""
+    if not APPLICANTS_DB:
+        # Generate some initial data
+        for i in range(20):
+            fake_email = f"user{random.randint(10000,99999)}@mail.com"
+            APPLICANTS_DB[fake_email] = generate_profile(fake_email)
+    
+    total = len(APPLICANTS_DB)
+    risk_counts = {"High": 0, "Medium": 0, "Low": 0}
+    
+    for profile in APPLICANTS_DB.values():
+        risk_counts[profile["risk_level"]] += 1
+    
+    return {
+        "total_applicants": total,
+        "active_defaults": risk_counts["High"],
+        "high_risk_percentage": f"{(risk_counts['High'] / total * 100):.1f}%" if total > 0 else "0%"
+    }
+
+@app.get("/health")
+async def health_check():
+    """Health check"""
+    return {
+        "status": "healthy",
+        "applicants_loaded": len(APPLICANTS_DB),
+        "timestamp": datetime.utcnow().isoformat()
+        }
