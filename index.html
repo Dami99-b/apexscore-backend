@@ -1,94 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>ApexScore – Risk Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<title>ApexScore</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-[#F8FAFC] text-gray-900">
+<body class="bg-gray-100">
 
 <script>
-const API_BASE = "https://apexscore.onrender.com";
+const API = "https://apexscore.onrender.com";
+
 let applicants = [];
 
-async function loadStats() {
-  const r = await fetch(`${API_BASE}/api/stats`);
-  const s = await r.json();
-  totalApplicants.innerText = s.total_applicants;
-  activeDefaults.innerText = s.active_defaults;
-  highRiskRatio.innerText = s.high_risk_percentage;
+function riskColor(r){
+  return r==="Low"?"text-green-600":r==="Medium"?"text-amber-600":"text-red-600";
 }
 
-async function loadApplicants() {
-  const r = await fetch(`${API_BASE}/api/applicants`);
-  const d = await r.json();
-  applicants = d.applicants || [];
+async function loadApplicants(){
+  const res = await fetch(`${API}/api/applicants`);
+  const data = await res.json();
+  applicants = data.applicants;
   render();
 }
 
-async function searchEmail() {
-  const q = searchInput.value.trim();
-  if (!q) return;
-  const r = await fetch(`${API_BASE}/api/search?email=${encodeURIComponent(q)}`);
-  const d = await r.json();
-  applicants.unshift(d);
+async function search(){
+  const email = document.getElementById("q").value.trim();
+  if(!email) return;
+
+  const res = await fetch(`${API}/api/search?email=${encodeURIComponent(email)}`);
+  const data = await res.json();
+
+  applicants.unshift(data);
   render();
+  showDetail(data);
 }
 
-function render() {
-  tableBody.innerHTML = "";
-  applicants.forEach(a => {
-    tableBody.innerHTML += `
-      <tr class="hover:bg-gray-50">
-        <td class="px-6 py-3 font-semibold">${a.name.full}</td>
-        <td class="px-6 py-3">${a.occupation}</td>
-        <td class="px-6 py-3">${a.apex_score}</td>
-        <td class="px-6 py-3">${a.risk_level}</td>
-      </tr>
-    `;
+function render(){
+  const t = document.getElementById("tbody");
+  t.innerHTML = "";
+  applicants.forEach(a=>{
+    t.innerHTML += `
+    <tr class="hover:bg-gray-50 cursor-pointer" onclick='showDetail(${JSON.stringify(a)})'>
+      <td class="p-3 font-mono">${a.email_masked}</td>
+      <td class="p-3">${a.occupation}</td>
+      <td class="p-3 font-bold ${riskColor(a.risk_level)}">${a.apex_score}</td>
+      <td class="p-3">${a.risk_level}</td>
+    </tr>`;
   });
 }
 
-window.onload = async () => {
-  await loadStats();
-  await loadApplicants();
-  setInterval(loadApplicants, 3000);
-};
+function showDetail(a){
+  document.getElementById("detail").classList.remove("hidden");
+
+  document.getElementById("d_name").innerText = a.name;
+  document.getElementById("d_email").innerText = a.email;
+  document.getElementById("d_country").innerText = a.country;
+  document.getElementById("d_isp").innerText = a.network.isp;
+  document.getElementById("d_device").innerText = `${a.device.type} • ${a.device.model}`;
+  document.getElementById("d_debt").innerText =
+    `${a.financials.currency} ${a.financials.outstanding_debt}`;
+
+  const banks = document.getElementById("banks");
+  banks.innerHTML="";
+  a.financials.bank_accounts.forEach(b=>{
+    banks.innerHTML += `<li>${b.bank} — *****${b.account_last_5}</li>`;
+  });
+}
+
+setInterval(loadApplicants,3000);
+window.onload = loadApplicants;
 </script>
 
-<div class="max-w-7xl mx-auto">
-
-<nav class="bg-white border-b px-6 py-4 flex justify-between">
-  <h1 class="font-black text-xl">ApexScore</h1>
-  <div class="flex gap-2">
-    <input id="searchInput" placeholder="Search email…" class="border px-3 py-1 rounded"/>
-    <button onclick="searchEmail()" class="bg-red-600 text-white px-4 rounded">Search</button>
-  </div>
-</nav>
-
-<div class="grid grid-cols-4 gap-4 p-6">
-  <div class="bg-white p-4 rounded">Applicants: <b id="totalApplicants"></b></div>
-  <div class="bg-white p-4 rounded">Defaults: <b id="activeDefaults"></b></div>
-  <div class="bg-white p-4 rounded">High Risk %: <b id="highRiskRatio"></b></div>
-  <div class="bg-white p-4 rounded">Model: 98.2%</div>
+<div class="p-4 bg-white shadow flex gap-2">
+  <input id="q" class="border p-2 flex-1" placeholder="Search email">
+  <button onclick="search()" class="bg-blue-600 text-white px-4">Search</button>
 </div>
 
-<div class="p-6">
-<table class="w-full bg-white rounded">
-<thead class="bg-gray-100 text-xs uppercase">
+<div class="p-4">
+<table class="w-full bg-white rounded shadow">
+<thead class="bg-gray-200">
 <tr>
-<th class="px-6 py-3">Applicant</th>
-<th class="px-6 py-3">Occupation</th>
-<th class="px-6 py-3">Score</th>
-<th class="px-6 py-3">Risk</th>
+<th class="p-3 text-left">Email</th>
+<th class="p-3">Occupation</th>
+<th class="p-3">Score</th>
+<th class="p-3">Risk</th>
 </tr>
 </thead>
-<tbody id="tableBody"></tbody>
+<tbody id="tbody"></tbody>
 </table>
 </div>
 
+<div id="detail" class="hidden fixed inset-0 bg-black/50">
+<div class="bg-white w-full max-w-lg h-full p-4 overflow-y-auto">
+<button onclick="this.parentElement.parentElement.classList.add('hidden')">Close</button>
+
+<h2 id="d_name" class="font-bold text-xl mt-2"></h2>
+<p id="d_email"></p>
+<p><b>Country:</b> <span id="d_country"></span></p>
+<p><b>ISP:</b> <span id="d_isp"></span></p>
+<p><b>Device:</b> <span id="d_device"></span></p>
+<p><b>Debt:</b> <span id="d_debt"></span></p>
+
+<h3 class="mt-4 font-bold">Linked Accounts</h3>
+<ul id="banks"></ul>
 </div>
+</div>
+
 </body>
 </html>
