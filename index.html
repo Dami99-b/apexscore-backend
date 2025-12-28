@@ -2,14 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>ApexScore AI – Risk Dashboard</title>
+  <title>ApexScore – Risk Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* Prevent horizontal scroll */
+    body {
+      overflow-x: hidden;
+      max-width: 100vw;
+    }
+    
+    /* Responsive table */
+    @media (max-width: 768px) {
+      table {
+        font-size: 0.875rem;
+      }
+      th, td {
+        padding: 0.5rem !important;
+      }
+    }
+    
+    /* Smooth transitions */
+    * {
+      transition: all 0.2s ease;
+    }
+  </style>
 </head>
 
 <body class="bg-[#F8FAFC] text-gray-900">
@@ -23,7 +41,6 @@ let selectedId = null;
 /* ------------------ UTIL ------------------ */
 
 function riskBadge(level) {
-  if (!level) return "";
   const map = {
     Low: "bg-green-50 text-green-700 border-green-200",
     Medium: "bg-amber-50 text-amber-700 border-amber-200",
@@ -41,30 +58,59 @@ function scoreColor(score) {
 /* ------------------ FETCH DATA ------------------ */
 
 async function loadStats() {
-  const res = await fetch(`${API_BASE}/api/stats`);
-  const stats = await res.json();
+  try {
+    const res = await fetch(`${API_BASE}/api/stats`);
+    const stats = await res.json();
 
-  document.getElementById("totalApplicants").innerText = stats.total_applicants;
-  document.getElementById("activeDefaults").innerText = stats.active_defaults;
-  document.getElementById("highRiskRatio").innerText = stats.high_risk_percentage;
+    document.getElementById("totalApplicants").innerText = stats.total_applicants || "0";
+    document.getElementById("activeDefaults").innerText = stats.active_defaults || "0";
+    document.getElementById("highRiskRatio").innerText = stats.high_risk_percentage || "0%";
+  } catch (error) {
+    console.error("Stats load error:", error);
+  }
 }
 
 async function loadApplicants() {
-  const res = await fetch(`${API_BASE}/api/applicants`);
-  const data = await res.json();
-  applicants = data.applicants || [];
-  renderTable(applicants);
+  try {
+    const res = await fetch(`${API_BASE}/api/applicants?limit=30`);
+    const data = await res.json();
+    applicants = data.applicants || [];
+    renderTable(applicants);
+  } catch (error) {
+    console.error("Applicants load error:", error);
+  }
 }
 
 async function searchEmail() {
   const q = document.getElementById("searchInput").value.trim();
-  if (!q) return;
+  if (!q || !q.includes("@")) {
+    alert("Please enter a valid email address");
+    return;
+  }
 
-  const res = await fetch(`${API_BASE}/api/search?name=${encodeURIComponent(q)}`);
-  const data = await res.json();
+  try {
+    const res = await fetch(`${API_BASE}/api/search?email=${encodeURIComponent(q)}`);
+    const data = await res.json();
 
-  applicants.unshift(data);
-  renderTable(applicants);
+    // Add to top of list if new
+    const exists = applicants.find(a => a.id === data.id);
+    if (!exists) {
+      applicants.unshift(data);
+    }
+    
+    renderTable(applicants);
+    
+    // Auto-open detail
+    openDetail(data.id);
+    
+    // Clear search
+    document.getElementById("searchInput").value = "";
+    
+    alert(`✅ Profile loaded!\nEmail: ${data.email_masked}\nApexScore: ${data.apex_score}\nRisk: ${data.risk_level}`);
+  } catch (error) {
+    console.error("Search error:", error);
+    alert("Search failed. Please try again.");
+  }
 }
 
 /* ------------------ TABLE ------------------ */
@@ -73,17 +119,27 @@ function renderTable(list) {
   const tbody = document.getElementById("tableBody");
   tbody.innerHTML = "";
 
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-12 text-center text-gray-500">Loading applicants...</td></tr>';
+    return;
+  }
+
   list.forEach(app => {
     const tr = document.createElement("tr");
-    tr.className = "hover:bg-gray-50 cursor-pointer";
+    tr.className = "hover:bg-gray-50 cursor-pointer border-b";
     tr.onclick = () => openDetail(app.id);
 
     tr.innerHTML = `
-      <td class="px-6 py-4 font-semibold">${app.name}</td>
-      <td class="px-6 py-4 text-sm">${app.occupation}</td>
-      <td class="px-6 py-4 font-bold ${scoreColor(app.apex_score)}">${app.apex_score}</td>
-      <td class="px-6 py-4">
-        <span class="px-2 py-1 text-xs font-bold border rounded-full ${riskBadge(app.risk_level)}">
+      <td class="px-3 sm:px-6 py-3 sm:py-4">
+        <div class="font-semibold text-gray-900 text-xs sm:text-base truncate max-w-[150px] sm:max-w-none">${app.email_masked || "***@mail.com"}</div>
+        <div class="text-xs sm:text-sm text-gray-500">${app.name || "Unknown"}</div>
+      </td>
+      <td class="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">${app.occupation || "N/A"}</td>
+      <td class="px-3 sm:px-6 py-3 sm:py-4">
+        <span class="font-bold text-base sm:text-lg ${scoreColor(app.apex_score)}">${app.apex_score}</span>
+      </td>
+      <td class="px-3 sm:px-6 py-3 sm:py-4">
+        <span class="px-2 sm:px-3 py-1 text-xs font-bold border rounded-full ${riskBadge(app.risk_level)}">
           ${app.risk_level}
         </span>
       </td>
@@ -96,37 +152,76 @@ function renderTable(list) {
 
 async function openDetail(id) {
   selectedId = id;
-  const res = await fetch(`${API_BASE}/api/applicant/${id}`);
-  const d = await res.json();
+  
+  try {
+    const res = await fetch(`${API_BASE}/api/applicant/${id}`);
+    const d = await res.json();
 
-  document.getElementById("panel").classList.remove("hidden");
+    document.getElementById("panel").classList.remove("hidden");
 
-  document.getElementById("p_name").innerText = d.name;
-  document.getElementById("p_email").innerText = d.email;
-  document.getElementById("p_phone").innerText = d.phone;
-  document.getElementById("p_occ").innerText = d.occupation;
-  document.getElementById("p_addr").innerText = d.location.address;
-  document.getElementById("p_score").innerText = d.apex_score;
-  document.getElementById("p_risk").innerText = d.risk_level;
-  document.getElementById("p_action").innerText = d.action_recommendation.recommendation;
+    // Basic info
+    document.getElementById("p_name").innerText = d.name || "Unknown";
+    document.getElementById("p_email").innerText = d.email || "N/A";
+    document.getElementById("p_email_masked").innerText = d.email_masked || "***";
+    document.getElementById("p_phone").innerText = d.phone || "N/A";
+    document.getElementById("p_occ").innerText = d.occupation || "N/A";
+    document.getElementById("p_country").innerText = `${d.location.city}, ${d.location.country}`;
+    document.getElementById("p_addr").innerText = d.location.address || "N/A";
+    
+    // Score & risk
+    document.getElementById("p_score").innerText = d.apex_score;
+    document.getElementById("p_score").className = `text-4xl font-bold ${scoreColor(d.apex_score)}`;
+    document.getElementById("p_risk").innerText = d.risk_level;
+    document.getElementById("p_risk").className = `inline-block px-3 py-1 text-sm font-bold border rounded-full ${riskBadge(d.risk_level)}`;
+    
+    // Action
+    document.getElementById("p_action").innerText = d.action_recommendation?.recommendation || "N/A";
 
-  /* Google Map */
-  document.getElementById("map").src =
-    `https://maps.google.com/maps?q=${d.location.coordinates.lat},${d.location.coordinates.lng}&z=14&output=embed`;
+    // Google Map
+    if (d.location?.coordinates) {
+      document.getElementById("map").src =
+        `https://maps.google.com/maps?q=${d.location.coordinates.lat},${d.location.coordinates.lng}&z=13&output=embed`;
+    }
 
-  /* Loan history */
-  const loans = document.getElementById("loanHistory");
-  loans.innerHTML = "";
-  d.tfd.loan_history.forEach(l => {
-    loans.innerHTML += `<li>${l.institution} — ${l.amount} (${l.date})</li>`;
-  });
+    // Loan history
+    const loans = document.getElementById("loanHistory");
+    loans.innerHTML = "";
+    if (d.tfd?.loan_history) {
+      d.tfd.loan_history.forEach(l => {
+        loans.innerHTML += `
+          <li class="py-2 border-b">
+            <div class="font-semibold">${l.institution}</div>
+            <div class="text-sm text-gray-600">${d.tfd.currency} ${l.amount.toLocaleString()} • ${l.date}</div>
+          </li>
+        `;
+      });
+    } else {
+      loans.innerHTML = '<li class="text-gray-500">No loan history</li>';
+    }
 
-  /* BSI */
-  const bsi = document.getElementById("bsi");
-  bsi.innerHTML = "";
-  Object.entries(d.bsi).forEach(([k,v]) => {
-    bsi.innerHTML += `<li>${k.replaceAll("_"," ")}: ${v}%</li>`;
-  });
+    // Outstanding debt
+    document.getElementById("p_debt").innerText = 
+      `${d.tfd.currency} ${d.tfd.outstanding_debt.toLocaleString()}`;
+
+    // BSI
+    const bsi = document.getElementById("bsi");
+    bsi.innerHTML = "";
+    if (d.bsi) {
+      Object.entries(d.bsi).forEach(([k, v]) => {
+        const label = k.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+        const color = v >= 75 ? "text-green-600" : v >= 50 ? "text-amber-600" : "text-red-600";
+        bsi.innerHTML += `
+          <li class="flex justify-between py-2 border-b">
+            <span>${label}</span>
+            <span class="font-bold ${color}">${v}/100</span>
+          </li>
+        `;
+      });
+    }
+  } catch (error) {
+    console.error("Detail load error:", error);
+    alert("Failed to load applicant details");
+  }
 }
 
 function closePanel() {
@@ -139,70 +234,155 @@ window.onload = async () => {
   lucide.createIcons();
   await loadStats();
   await loadApplicants();
-  setInterval(loadApplicants, 3000); // endless refresh
+  
+  // Auto-refresh every 5 seconds
+  setInterval(async () => {
+    await loadApplicants();
+    await loadStats();
+  }, 5000);
 };
+
+// Enter key support for search
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('searchInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      searchEmail();
+    }
+  });
+});
 </script>
 
 <!-- NAV -->
-<nav class="bg-white border-b px-6 py-4 flex justify-between">
-  <h1 class="font-black text-xl">ApexScore <span class="text-red-600">AI</span></h1>
-  <div class="flex gap-2">
-    <input id="searchInput" placeholder="Search email…" class="border px-3 py-1 rounded"/>
-    <button onclick="searchEmail()" class="bg-red-600 text-white px-4 rounded">Search</button>
+<nav class="bg-white border-b px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-center shadow-sm gap-4">
+  <h1 class="font-black text-xl sm:text-2xl">ApexScore</h1>
+  <div class="flex gap-2 w-full sm:w-auto">
+    <input 
+      id="searchInput" 
+      placeholder="Search by email…" 
+      class="border-2 border-gray-300 px-3 sm:px-4 py-2 rounded-lg focus:border-blue-500 focus:outline-none flex-1 sm:flex-initial text-sm sm:text-base"
+      type="email"
+    />
+    <button 
+      onclick="searchEmail()" 
+      class="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-2 rounded-lg font-semibold transition text-sm sm:text-base whitespace-nowrap"
+    >
+      Search
+    </button>
   </div>
 </nav>
 
 <!-- STATS -->
-<div class="grid grid-cols-4 gap-4 p-6">
-  <div class="bg-white p-4 rounded">Applicants: <b id="totalApplicants">0</b></div>
-  <div class="bg-white p-4 rounded">Defaults: <b id="activeDefaults">0</b></div>
-  <div class="bg-white p-4 rounded">High Risk %: <b id="highRiskRatio">0</b></div>
-  <div class="bg-white p-4 rounded">Model: 98.2%</div>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 p-4 sm:p-6">
+  <div class="bg-white p-4 sm:p-6 rounded-lg shadow">
+    <div class="text-xs sm:text-sm text-gray-500 uppercase font-semibold mb-2">Total Applicants</div>
+    <div class="text-2xl sm:text-3xl font-bold" id="totalApplicants">0</div>
+  </div>
+  <div class="bg-white p-4 sm:p-6 rounded-lg shadow">
+    <div class="text-xs sm:text-sm text-gray-500 uppercase font-semibold mb-2">Defaults</div>
+    <div class="text-2xl sm:text-3xl font-bold text-red-600" id="activeDefaults">0</div>
+  </div>
+  <div class="bg-white p-4 sm:p-6 rounded-lg shadow">
+    <div class="text-xs sm:text-sm text-gray-500 uppercase font-semibold mb-2">High Risk %</div>
+    <div class="text-2xl sm:text-3xl font-bold text-amber-600" id="highRiskRatio">0%</div>
+  </div>
+  <div class="bg-white p-4 sm:p-6 rounded-lg shadow">
+    <div class="text-xs sm:text-sm text-gray-500 uppercase font-semibold mb-2">Accuracy</div>
+    <div class="text-2xl sm:text-3xl font-bold text-green-600">98.2%</div>
+  </div>
 </div>
 
 <!-- TABLE -->
-<div class="p-6">
-<table class="w-full bg-white rounded overflow-hidden">
-<thead class="bg-gray-100 text-xs uppercase">
-<tr>
-<th class="px-6 py-3">Applicant</th>
-<th class="px-6 py-3">Occupation</th>
-<th class="px-6 py-3">Score</th>
-<th class="px-6 py-3">Risk</th>
-</tr>
-</thead>
-<tbody id="tableBody"></tbody>
-</table>
+<div class="p-4 sm:p-6">
+  <div class="bg-white rounded-lg shadow overflow-x-auto">
+    <table class="w-full min-w-full">
+      <thead class="bg-gray-50 border-b">
+        <tr>
+          <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase">Applicant</th>
+          <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase hidden sm:table-cell">Occupation</th>
+          <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase">Score</th>
+          <th class="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase">Risk</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr>
+          <td colspan="4" class="px-6 py-12 text-center text-gray-500 text-sm">Loading...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <!-- DETAIL PANEL -->
-<div id="panel" class="hidden fixed inset-0 bg-black/30">
-<div class="absolute right-0 top-0 w-full max-w-xl h-full bg-white p-6 overflow-y-auto">
-<button onclick="closePanel()" class="mb-4 text-red-600">Close</button>
+<div id="panel" class="hidden fixed inset-0 bg-black/50 z-50">
+  <div class="absolute right-0 top-0 w-full sm:w-[90%] md:w-[600px] lg:w-[700px] h-full bg-white shadow-2xl overflow-y-auto">
+    <div class="p-4 sm:p-6">
+      <button 
+        onclick="closePanel()" 
+        class="mb-4 sm:mb-6 text-red-600 hover:text-red-800 font-semibold flex items-center gap-2 text-sm sm:text-base"
+      >
+        ← Close
+      </button>
 
-<h2 id="p_name" class="text-xl font-bold"></h2>
-<p id="p_occ"></p>
+      <div class="mb-4 sm:mb-6">
+        <h2 id="p_name" class="text-2xl sm:text-3xl font-bold text-gray-900"></h2>
+        <p id="p_occ" class="text-gray-600 mt-1 text-sm sm:text-base"></p>
+      </div>
 
-<p>Email: <span id="p_email"></span></p>
-<p>Phone: <span id="p_phone"></span></p>
-<p>Address: <span id="p_addr"></span></p>
+      <!-- ApexScore Card -->
+      <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-4 sm:p-6 rounded-lg mb-4 sm:mb-6">
+        <div class="text-xs sm:text-sm text-gray-600 mb-2">ApexScore</div>
+        <div id="p_score" class="text-4xl sm:text-5xl font-bold mb-3"></div>
+        <div id="p_risk"></div>
+      </div>
 
-<h3 class="mt-4 font-bold">ApexScore</h3>
-<p id="p_score"></p>
-<p id="p_risk"></p>
+      <!-- Contact Info -->
+      <div class="bg-gray-50 p-3 sm:p-4 rounded-lg mb-4 sm:mb-6">
+        <h3 class="font-bold mb-3 text-sm sm:text-base">Contact Information</h3>
+        <div class="space-y-2 text-xs sm:text-sm">
+          <div class="break-words"><span class="text-gray-600">Email (Masked):</span> <span id="p_email_masked" class="font-mono"></span></div>
+          <div class="break-words"><span class="text-gray-600">Email (Full):</span> <span id="p_email" class="font-mono"></span></div>
+          <div><span class="text-gray-600">Phone:</span> <span id="p_phone"></span></div>
+          <div><span class="text-gray-600">Location:</span> <span id="p_country"></span></div>
+          <div class="break-words"><span class="text-gray-600">Address:</span> <span id="p_addr"></span></div>
+        </div>
+      </div>
 
-<h3 class="mt-4 font-bold">Loans</h3>
-<ul id="loanHistory"></ul>
+      <!-- Financial Data -->
+      <div class="mb-4 sm:mb-6">
+        <h3 class="font-bold mb-3 text-sm sm:text-base">Financial Data (TFD)</h3>
+        <div class="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 mb-4">
+          <div class="text-xs sm:text-sm text-gray-600">Outstanding Debt</div>
+          <div id="p_debt" class="text-xl sm:text-2xl font-bold text-red-600"></div>
+        </div>
+        
+        <h4 class="font-semibold mb-2 text-xs sm:text-sm text-gray-600">Loan History</h4>
+        <ul id="loanHistory" class="space-y-1 text-xs sm:text-sm"></ul>
+      </div>
 
-<h3 class="mt-4 font-bold">BSI</h3>
-<ul id="bsi"></ul>
+      <!-- BSI -->
+      <div class="mb-4 sm:mb-6">
+        <h3 class="font-bold mb-3 text-sm sm:text-base">Behavioral Stability Indicators (BSI)</h3>
+        <ul id="bsi" class="space-y-1 text-xs sm:text-sm"></ul>
+      </div>
 
-<h3 class="mt-4 font-bold">Recommendation</h3>
-<p id="p_action"></p>
+      <!-- Action -->
+      <div class="bg-amber-50 border-l-4 border-amber-500 p-3 sm:p-4 mb-4 sm:mb-6">
+        <h3 class="font-bold mb-2 text-sm sm:text-base">Recommended Action</h3>
+        <p id="p_action" class="text-xs sm:text-sm"></p>
+      </div>
 
-<iframe id="map" class="w-full h-48 mt-4"></iframe>
-</div>
+      <!-- Map -->
+      <div class="mb-4 sm:mb-6">
+        <h3 class="font-bold mb-3 text-sm sm:text-base">Location Map</h3>
+        <iframe 
+          id="map" 
+          class="w-full h-48 sm:h-64 rounded-lg border"
+          loading="lazy"
+        ></iframe>
+      </div>
+    </div>
+  </div>
 </div>
 
 </body>
-</html>
+          </html>
