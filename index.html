@@ -2,216 +2,207 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>ApexScore AI – Global Credit Intelligence</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ApexScore AI – Risk Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- React -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, Arial;
-      background: #f5f7fb;
-      color: #111;
-    }
-    header {
-      background: #111827;
-      color: white;
-      padding: 16px 24px;
-    }
-    input {
-      padding: 10px;
-      width: 100%;
-      font-size: 14px;
-    }
-    button {
-      padding: 10px 16px;
-      background: #c1121f;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    .container {
-      padding: 24px;
-      max-width: 1200px;
-      margin: auto;
-    }
-    .card {
-      background: white;
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-    th, td {
-      padding: 8px;
-      border-bottom: 1px solid #eee;
-      text-align: left;
-    }
-    .badge {
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: bold;
-    }
-    .low { background: #dcfce7; color: #166534; }
-    .medium { background: #fef3c7; color: #92400e; }
-    .high { background: #fee2e2; color: #991b1b; }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 16px;
-    }
-    small { color: #666; }
-  </style>
+  <!-- Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
-<body>
-<header>
-  <h2>ApexScore AI</h2>
-  <small>Unified Global Loan & Risk Intelligence</small>
-</header>
+<body class="bg-[#F8FAFC] text-gray-900">
 
-<div id="root"></div>
+<script>
+const API_BASE = "https://apexscore.onrender.com";
 
-<script type="text/babel">
-const API = "https://apexscore.onrender.com";
+let applicants = [];
+let selectedId = null;
 
-function App() {
-  const [email, setEmail] = React.useState("");
-  const [profile, setProfile] = React.useState(null);
-  const [feed, setFeed] = React.useState([]);
+/* ------------------ UTIL ------------------ */
 
-  // endless feed (auto-generate)
-  React.useEffect(() => {
-    const interval = setInterval(async () => {
-      const randomEmail =
-        "user" + Math.floor(Math.random() * 100000) + "@mail.com";
-
-      const res = await fetch(\`\${API}/api/search?email=\${randomEmail}\`);
-      const data = await res.json();
-
-      setFeed(prev => [data, ...prev].slice(0, 50));
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const search = async () => {
-    if (!email) return;
-    const res = await fetch(\`\${API}/api/search?email=\${email}\`);
-    const data = await res.json();
-    setProfile(data);
+function riskBadge(level) {
+  if (!level) return "";
+  const map = {
+    Low: "bg-green-50 text-green-700 border-green-200",
+    Medium: "bg-amber-50 text-amber-700 border-amber-200",
+    High: "bg-red-50 text-red-700 border-red-200"
   };
-
-  return (
-    <div className="container">
-      <div className="card">
-        <h3>Search by Email</h3>
-        <input
-          placeholder="e.g. kreuger453@gmail.com"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-        />
-        <br /><br />
-        <button onClick={search}>Search</button>
-      </div>
-
-      {profile && (
-        <div className="card">
-          <h3>{profile.legal_name?.full}</h3>
-          <span className={"badge " + profile.risk_level.toLowerCase()}>
-            ApexScore {profile.apex_score} – {profile.risk_level}
-          </span>
-
-          <div className="grid" style={{marginTop: 16}}>
-            <div>
-              <strong>Contact</strong>
-              <p>{profile.email}</p>
-              <p>{profile.phone}</p>
-              <p>{profile.occupation}</p>
-            </div>
-
-            <div>
-              <strong>Location</strong>
-              <p>{profile.location.address}</p>
-              <p>{profile.location.city}, {profile.location.country}</p>
-              <iframe
-                width="100%"
-                height="150"
-                style={{border:0}}
-                loading="lazy"
-                src={`https://www.google.com/maps?q=${profile.location.coordinates.lat},${profile.location.coordinates.lng}&output=embed`}
-              />
-            </div>
-
-            <div>
-              <strong>Outstanding Debt</strong>
-              <p>{profile.tfd.currency} {profile.tfd.outstanding_debt.toLocaleString()}</p>
-            </div>
-          </div>
-
-          <h4>Loan History</h4>
-          <table>
-            <thead>
-              <tr><th>Institution</th><th>Amount</th><th>Date</th></tr>
-            </thead>
-            <tbody>
-              {profile.tfd.loan_history.map((l,i)=>(
-                <tr key={i}>
-                  <td>{l.institution}</td>
-                  <td>{profile.tfd.currency} {l.amount.toLocaleString()}</td>
-                  <td>{l.date}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <h4>Repayment History</h4>
-          <table>
-            <thead>
-              <tr><th>Month</th><th>Status</th><th>Amount</th><th>Days Late</th></tr>
-            </thead>
-            <tbody>
-              {profile.tfd.repayment_history.map((r,i)=>(
-                <tr key={i}>
-                  <td>{r.date}</td>
-                  <td>{r.status}</td>
-                  <td>{r.amount}</td>
-                  <td>{r.days_late || "-"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <h4>Behavioral Stability Index</h4>
-          {Object.entries(profile.bsi).map(([k,v])=>(
-            <p key={k}>{k.replaceAll("_"," ")}: {v}</p>
-          ))}
-        </div>
-      )}
-
-      <div className="card">
-        <h3>Live Global Feed (Auto-generated)</h3>
-        {feed.map((f,i)=>(
-          <p key={i}>
-            {f.legal_name?.full} — {f.email} — Score {f.apex_score}
-          </p>
-        ))}
-      </div>
-    </div>
-  );
+  return map[level] || "bg-gray-50";
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+function scoreColor(score) {
+  if (score >= 75) return "text-green-600";
+  if (score >= 50) return "text-amber-600";
+  return "text-red-600";
+}
+
+/* ------------------ FETCH DATA ------------------ */
+
+async function loadStats() {
+  const res = await fetch(`${API_BASE}/api/stats`);
+  const stats = await res.json();
+
+  document.getElementById("totalApplicants").innerText = stats.total_applicants;
+  document.getElementById("activeDefaults").innerText = stats.active_defaults;
+  document.getElementById("highRiskRatio").innerText = stats.high_risk_percentage;
+}
+
+async function loadApplicants() {
+  const res = await fetch(`${API_BASE}/api/applicants`);
+  const data = await res.json();
+  applicants = data.applicants || [];
+  renderTable(applicants);
+}
+
+async function searchEmail() {
+  const q = document.getElementById("searchInput").value.trim();
+  if (!q) return;
+
+  const res = await fetch(`${API_BASE}/api/search?name=${encodeURIComponent(q)}`);
+  const data = await res.json();
+
+  applicants.unshift(data);
+  renderTable(applicants);
+}
+
+/* ------------------ TABLE ------------------ */
+
+function renderTable(list) {
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML = "";
+
+  list.forEach(app => {
+    const tr = document.createElement("tr");
+    tr.className = "hover:bg-gray-50 cursor-pointer";
+    tr.onclick = () => openDetail(app.id);
+
+    tr.innerHTML = `
+      <td class="px-6 py-4 font-semibold">${app.name}</td>
+      <td class="px-6 py-4 text-sm">${app.occupation}</td>
+      <td class="px-6 py-4 font-bold ${scoreColor(app.apex_score)}">${app.apex_score}</td>
+      <td class="px-6 py-4">
+        <span class="px-2 py-1 text-xs font-bold border rounded-full ${riskBadge(app.risk_level)}">
+          ${app.risk_level}
+        </span>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ------------------ DETAIL PANEL ------------------ */
+
+async function openDetail(id) {
+  selectedId = id;
+  const res = await fetch(`${API_BASE}/api/applicant/${id}`);
+  const d = await res.json();
+
+  document.getElementById("panel").classList.remove("hidden");
+
+  document.getElementById("p_name").innerText = d.name;
+  document.getElementById("p_email").innerText = d.email;
+  document.getElementById("p_phone").innerText = d.phone;
+  document.getElementById("p_occ").innerText = d.occupation;
+  document.getElementById("p_addr").innerText = d.location.address;
+  document.getElementById("p_score").innerText = d.apex_score;
+  document.getElementById("p_risk").innerText = d.risk_level;
+  document.getElementById("p_action").innerText = d.action_recommendation.recommendation;
+
+  /* Google Map */
+  document.getElementById("map").src =
+    `https://maps.google.com/maps?q=${d.location.coordinates.lat},${d.location.coordinates.lng}&z=14&output=embed`;
+
+  /* Loan history */
+  const loans = document.getElementById("loanHistory");
+  loans.innerHTML = "";
+  d.tfd.loan_history.forEach(l => {
+    loans.innerHTML += `<li>${l.institution} — ${l.amount} (${l.date})</li>`;
+  });
+
+  /* BSI */
+  const bsi = document.getElementById("bsi");
+  bsi.innerHTML = "";
+  Object.entries(d.bsi).forEach(([k,v]) => {
+    bsi.innerHTML += `<li>${k.replaceAll("_"," ")}: ${v}%</li>`;
+  });
+}
+
+function closePanel() {
+  document.getElementById("panel").classList.add("hidden");
+}
+
+/* ------------------ INIT ------------------ */
+
+window.onload = async () => {
+  lucide.createIcons();
+  await loadStats();
+  await loadApplicants();
+  setInterval(loadApplicants, 3000); // endless refresh
+};
 </script>
+
+<!-- NAV -->
+<nav class="bg-white border-b px-6 py-4 flex justify-between">
+  <h1 class="font-black text-xl">ApexScore <span class="text-red-600">AI</span></h1>
+  <div class="flex gap-2">
+    <input id="searchInput" placeholder="Search email…" class="border px-3 py-1 rounded"/>
+    <button onclick="searchEmail()" class="bg-red-600 text-white px-4 rounded">Search</button>
+  </div>
+</nav>
+
+<!-- STATS -->
+<div class="grid grid-cols-4 gap-4 p-6">
+  <div class="bg-white p-4 rounded">Applicants: <b id="totalApplicants">0</b></div>
+  <div class="bg-white p-4 rounded">Defaults: <b id="activeDefaults">0</b></div>
+  <div class="bg-white p-4 rounded">High Risk %: <b id="highRiskRatio">0</b></div>
+  <div class="bg-white p-4 rounded">Model: 98.2%</div>
+</div>
+
+<!-- TABLE -->
+<div class="p-6">
+<table class="w-full bg-white rounded overflow-hidden">
+<thead class="bg-gray-100 text-xs uppercase">
+<tr>
+<th class="px-6 py-3">Applicant</th>
+<th class="px-6 py-3">Occupation</th>
+<th class="px-6 py-3">Score</th>
+<th class="px-6 py-3">Risk</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+
+<!-- DETAIL PANEL -->
+<div id="panel" class="hidden fixed inset-0 bg-black/30">
+<div class="absolute right-0 top-0 w-full max-w-xl h-full bg-white p-6 overflow-y-auto">
+<button onclick="closePanel()" class="mb-4 text-red-600">Close</button>
+
+<h2 id="p_name" class="text-xl font-bold"></h2>
+<p id="p_occ"></p>
+
+<p>Email: <span id="p_email"></span></p>
+<p>Phone: <span id="p_phone"></span></p>
+<p>Address: <span id="p_addr"></span></p>
+
+<h3 class="mt-4 font-bold">ApexScore</h3>
+<p id="p_score"></p>
+<p id="p_risk"></p>
+
+<h3 class="mt-4 font-bold">Loans</h3>
+<ul id="loanHistory"></ul>
+
+<h3 class="mt-4 font-bold">BSI</h3>
+<ul id="bsi"></ul>
+
+<h3 class="mt-4 font-bold">Recommendation</h3>
+<p id="p_action"></p>
+
+<iframe id="map" class="w-full h-48 mt-4"></iframe>
+</div>
+</div>
+
 </body>
 </html>
