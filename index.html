@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ApexScore AI</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+</head>
+<body style="font-family:Arial">
+
+<div id="root"></div>
+
+<script>
+const API = "https://YOUR-BACKEND-URL.onrender.com";
+
+function App() {
+  const [email, setEmail] = React.useState("");
+  const [profile, setProfile] = React.useState(null);
+
+  const search = async () => {
+    const res = await fetch(`${API}/api/search?email=${email}`);
+    setProfile(await res.json());
+  };
+
+  return (
+    <div style={{padding:20}}>
+      <h1>ApexScore Global Search</h1>
+
+      <input
+        placeholder="email address"
+        value={email}
+        onChange={e=>setEmail(e.target.value)}
+      />
+      <button onClick={search}>Search</button>
+
+      {profile && (
+        <pre>{JSON.stringify(profile, null, 2)}</pre>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+</script>
+</body>
+</html>
