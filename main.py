@@ -6,8 +6,7 @@ import random, hashlib, uuid
 
 app = FastAPI(
     title="ApexScore Global Credit Intelligence",
-    description="Global Unified Loan History & Risk Engine",
-    version="6.1"
+    version="7.0"
 )
 
 app.add_middleware(
@@ -17,93 +16,120 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ======================================================
-# GLOBAL DATA
-# ======================================================
+# =====================================================
+# GLOBAL DATA (LARGE & COUNTRY-SPECIFIC)
+# =====================================================
 
 COUNTRIES = {
     "Nigeria": {
         "currency": "NGN",
         "isps": ["MTN", "Airtel", "Glo", "9mobile", "Starlink NG"],
-        "banks": ["GTBank", "Access Bank", "Opay", "Palmpay", "Moniepoint", "Kuda", "FairMoney", "Carbon"]
-    },
-    "Kenya": {
-        "currency": "KES",
-        "isps": ["Safaricom", "Airtel KE", "Telkom"],
-        "banks": ["KCB", "Equity Bank", "M-Pesa", "NCBA", "Absa KE"]
+        "banks": [
+            "GTBank", "Access Bank", "Zenith",
+            "Kuda", "Opay", "Moniepoint", "Palmpay",
+            "FairMoney MFB", "Carbon MFB", "LAPO MFB"
+        ]
     },
     "USA": {
         "currency": "USD",
         "isps": ["Verizon", "AT&T", "T-Mobile", "Comcast"],
-        "banks": ["Chase", "Bank of America", "Wells Fargo", "Chime", "Cash App"]
+        "banks": ["Chase", "Wells Fargo", "Bank of America", "Chime", "Cash App"]
     },
     "UK": {
         "currency": "GBP",
-        "isps": ["Vodafone UK", "O2", "EE", "BT"],
-        "banks": ["HSBC", "Barclays", "Monzo", "Starling", "Lloyds"]
+        "isps": ["Vodafone", "EE", "O2", "BT"],
+        "banks": ["HSBC", "Barclays", "Lloyds", "Monzo", "Starling"]
     },
     "India": {
         "currency": "INR",
-        "isps": ["Airtel IN", "Reliance Jio", "Vodafone Idea"],
-        "banks": ["HDFC", "ICICI", "Paytm", "Axis Bank"]
+        "isps": ["Airtel", "Jio", "Vi"],
+        "banks": ["HDFC", "ICICI", "Axis", "Paytm"]
+    },
+    "Kenya": {
+        "currency": "KES",
+        "isps": ["Safaricom", "Airtel KE"],
+        "banks": ["KCB", "Equity", "M-Pesa", "NCBA"]
     }
 }
 
+FIRST_NAMES = [
+    "Michael","Ahmed","Fatima","Daniel","Grace","Samuel","Aisha","John",
+    "Robert","Linda","Patricia","James","Elizabeth","Maria","Chen","Wei",
+    "Raj","Anita","Mohammed","Yusuf","Ibrahim","Sadiq","Blessing"
+]
+
+LAST_NAMES = [
+    "Okoye","Adeyemi","Balogun","Smith","Brown","Johnson","Patel","Singh",
+    "Khan","Ali","Garcia","Martinez","Chen","Wang","Hassan","Abdul"
+]
+
 OCCUPATIONS = [
-    "Market Trader", "Okada Rider", "Taxi Driver", "Bolt Driver",
-    "POS Agent", "Bricklayer", "Welder", "Carpenter",
-    "Phone Repairer", "Street Food Vendor", "Farmer",
-    "Fisherman", "Tailor", "Laundry Operator",
-    "Sole Proprietor", "Small Shop Owner"
+    "Market Trader","Taxi Driver","Ride-Hailing Driver","POS Agent",
+    "Bricklayer","Carpenter","Welder","Mechanic","Farmer","Fisherman",
+    "Street Vendor","Phone Repairer","Laundry Operator","Tailor",
+    "Sole Proprietor","Shop Owner","Courier","Security Guard"
 ]
 
 ANDROID_MODELS = [
-    "Tecno Spark 10", "Infinix Hot 30", "Samsung A12",
-    "Redmi Note 11", "Itel S23", "Pixel 6"
+    "Tecno Spark 10","Infinix Hot 30","Samsung A04","Samsung A12",
+    "Redmi 9A","Redmi Note 11","Itel S23","Pixel 6","Pixel 7"
 ]
 
-IOS_MODELS = ["iPhone 11", "iPhone 12", "iPhone 13"]
-DESKTOP_DEVICES = ["Windows Chrome", "macOS Safari", "Ubuntu Firefox"]
+IOS_MODELS = ["iPhone XR","iPhone 11","iPhone 12","iPhone 13","iPhone 14"]
 
-APPLICANTS_DB: Dict[str, Dict] = {}
+DESKTOP_DEVICES = ["Windows 10 Chrome","Windows 11 Edge","macOS Safari"]
+
+# =====================================================
+# STORAGE
+# =====================================================
+
+APPLICANTS: Dict[str, Dict] = {}
 ACTIVITY_LOGS: List[Dict] = []
-DECISION_LOGS: List[Dict] = []
 
-# ======================================================
+# =====================================================
 # HELPERS
-# ======================================================
+# =====================================================
 
-def seed(value: str):
-    random.seed(int(hashlib.sha256(value.encode()).hexdigest(), 16))
+def seed(val: str):
+    random.seed(int(hashlib.sha256(val.encode()).hexdigest(), 16))
 
-def risk_level(score):
+def mask_email(email: str):
+    name, domain = email.split("@")
+    return f"{name[:2]}***@{domain}"
+
+def risk_level(score: int):
     return "Low" if score >= 75 else "Medium" if score >= 50 else "High"
 
-# ======================================================
-# DEVICE
-# ======================================================
+# =====================================================
+# DEVICE FINGERPRINT
+# =====================================================
 
-def generate_device(email: str):
+def device_profile(email: str):
     seed(email + "device")
-    device_type = random.choice(["Android", "iOS", "Desktop"])
+    device_type = random.choice(["Android","iOS","Desktop"])
 
     if device_type == "Android":
-        return {"type": "Android", "model": random.choice(ANDROID_MODELS)}
-    if device_type == "iOS":
-        return {"type": "iOS", "model": random.choice(IOS_MODELS)}
-    return {"type": "Desktop", "model": random.choice(DESKTOP_DEVICES)}
+        model = random.choice(ANDROID_MODELS)
+        os = f"Android {random.randint(9,14)}"
+    elif device_type == "iOS":
+        model = random.choice(IOS_MODELS)
+        os = f"iOS {random.randint(13,17)}"
+    else:
+        model = random.choice(DESKTOP_DEVICES)
+        os = "Desktop"
 
-# ======================================================
-# PROFILE
-# ======================================================
+    return {
+        "device_id": hashlib.md5(email.encode()).hexdigest(),
+        "type": device_type,
+        "model": model,
+        "os": os,
+        "emulator": random.random() < 0.05,
+        "rooted": random.random() < 0.08
+    }
 
-FIRST_NAMES = ["John", "Ahmed", "Blessing", "Michael", "Daniel", "Aisha", "Sadiq", "Fatima"]
-LAST_NAMES = ["Okoye", "Smith", "Hassan", "Patel", "Brown", "Adeyemi", "Khan"]
-
-EMAIL_DOMAINS = ["gmail.com", "yahoo.com", "outlook.com"]
-
-def generate_real_email():
-    return f"{random.choice(LAST_NAMES).lower()}{random.randint(10,999)}@{random.choice(EMAIL_DOMAINS)}"
+# =====================================================
+# PROFILE GENERATOR
+# =====================================================
 
 def generate_profile(email: str):
     seed(email)
@@ -116,61 +142,62 @@ def generate_profile(email: str):
 
     score = random.randint(25, 95)
 
-    return {
+    profile = {
         "id": str(uuid.uuid4()),
         "email": email,
-        "name": {
-            "first": first,
-            "last": last,
-            "full": f"{first} {last}"
-        },
+        "email_masked": mask_email(email),
+        "name": f"{first} {last}",
         "country": country,
         "occupation": random.choice(OCCUPATIONS),
+        "apex_score": score,
+        "risk_level": risk_level(score),
+        "network": {
+            "isp": random.choice(c["isps"]),
+            "ip_risk": random.choice(["Low","Medium","High"])
+        },
         "financials": {
             "currency": c["currency"],
-            "outstanding_debt": random.randint(500, 25000),
+            "outstanding_debt": random.randint(500, 30000),
             "bank_accounts": [
                 {
                     "bank": random.choice(c["banks"]),
-                    "account_last_5": random.randint(10000, 99999)
-                } for _ in range(random.randint(1, 3))
+                    "account_last_5": random.randint(10000,99999)
+                }
+                for _ in range(random.randint(1,3))
             ]
         },
-        "device": generate_device(email),
-        "network": {"isp": random.choice(c["isps"])},
-        "apex_score": score,
-        "risk_level": risk_level(score),
+        "device": device_profile(email),
         "created_at": datetime.utcnow().isoformat()
     }
 
-# ======================================================
+    return profile
+
+# =====================================================
 # API
-# ======================================================
+# =====================================================
 
 @app.get("/api/search")
 async def search(email: str, request: Request):
     if "@" not in email:
         raise HTTPException(400, "Invalid email")
 
-    if email not in APPLICANTS_DB:
-        APPLICANTS_DB[email] = generate_profile(email)
+    if email not in APPLICANTS:
+        APPLICANTS[email] = generate_profile(email)
 
-    return APPLICANTS_DB[email]
+    ACTIVITY_LOGS.append({
+        "email": email,
+        "ip": request.client.host,
+        "time": datetime.utcnow().isoformat()
+    })
+
+    return APPLICANTS[email]
 
 @app.get("/api/applicants")
-async def endless(limit: int = 20):
-    while len(APPLICANTS_DB) < limit:
-        fake = generate_real_email()
-        APPLICANTS_DB[fake] = generate_profile(fake)
+async def endless(limit: int = 25):
+    while len(APPLICANTS) < limit:
+        fake = f"user{random.randint(10000,99999)}@mail.com"
+        APPLICANTS[fake] = generate_profile(fake)
 
-    return {"applicants": list(APPLICANTS_DB.values())[-limit:]}
-
-@app.get("/api/stats")
-async def stats():
-    total = len(APPLICANTS_DB)
-    high = sum(1 for a in APPLICANTS_DB.values() if a["risk_level"] == "High")
     return {
-        "total_applicants": total,
-        "active_defaults": high,
-        "high_risk_percentage": f"{(high/total*100):.1f}%" if total else "0%"
-}
+        "applicants": list(APPLICANTS.values())[-limit:]
+                                     }
