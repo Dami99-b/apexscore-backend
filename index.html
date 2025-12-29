@@ -23,6 +23,10 @@
   .modal-backdrop {
     backdrop-filter: blur(8px);
   }
+  /* Hide scrollbar for marquee */
+  .marquee-container::-webkit-scrollbar {
+    display: none;
+  }
 </style>
 </head>
 
@@ -30,34 +34,34 @@
 
 <!-- Header -->
 <header class="border-b border-white/10 bg-black/40 backdrop-blur-sm sticky top-0 z-40">
-  <div class="container mx-auto px-6 py-4">
-    <div class="flex justify-between items-center">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-          <span class="text-xl font-black">A</span>
+  <div class="px-3 sm:px-6 py-3 sm:py-4">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+          <span class="text-lg sm:text-xl font-black">A</span>
         </div>
         <div>
-          <h1 class="text-2xl font-black tracking-tight">ApexScore</h1>
-          <p class="text-xs text-gray-400">AI Risk Intelligence Platform</p>
+          <h1 class="text-xl sm:text-2xl font-black tracking-tight">ApexScore</h1>
+          <p class="text-xs text-gray-400 hidden sm:block">AI Risk Intelligence</p>
         </div>
       </div>
       
-      <div class="flex gap-3 items-center">
-        <div class="relative">
+      <div class="flex gap-2 items-center w-full sm:w-auto">
+        <div class="relative flex-1 sm:flex-none">
           <input 
             id="searchInput" 
-            placeholder="Search by email address..." 
-            class="px-4 py-2.5 rounded-lg text-black w-80 pr-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Search email..." 
+            class="px-3 py-2 text-sm rounded-lg text-black w-full sm:w-64 pr-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
           <button 
             id="searchBtn"
-            class="absolute right-1 top-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1.5 rounded-md hover:from-blue-700 hover:to-purple-700 transition-all"
+            class="absolute right-1 top-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1 text-sm rounded-md hover:from-blue-700 hover:to-purple-700 transition-all"
           >
             Search
           </button>
         </div>
-        <button id="statsBtn" class="px-4 py-2.5 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-all">
-          Dashboard
+        <button id="statsBtn" class="px-3 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-all whitespace-nowrap">
+          Stats
         </button>
       </div>
     </div>
@@ -65,105 +69,102 @@
 </header>
 
 <!-- Marquee Banner -->
-<div class="bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 border-y border-white/10 overflow-hidden py-3">
+<div class="bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 border-y border-white/10 overflow-hidden py-2">
   <div class="flex whitespace-nowrap marquee-content">
-    <span class="inline-flex items-center gap-8 text-sm">
+    <span class="inline-flex items-center gap-4 sm:gap-8 text-xs sm:text-sm">
       <span class="flex items-center gap-2">
         <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-        Real-time Risk Assessment Powered by Advanced AI
+        Real-time AI Risk Assessment
       </span>
       <span class="text-gray-400">|</span>
       <span class="flex items-center gap-2">
         <span class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
-        Predict Default Risk with 94% Accuracy
+        94% Accuracy Rate
       </span>
       <span class="text-gray-400">|</span>
       <span class="flex items-center gap-2">
         <span class="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></span>
-        Behavioral Stability Indicators + Traditional Financial Data
+        Behavioral + Financial Data
       </span>
       <span class="text-gray-400">|</span>
       <span class="flex items-center gap-2">
         <span class="w-2 h-2 bg-pink-400 rounded-full animate-pulse"></span>
-        Legally Compliant & Fully Auditable Risk Scoring
+        Fully Auditable
       </span>
       <span class="text-gray-400">|</span>
       <span class="flex items-center gap-2">
         <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-        Real-time Risk Assessment Powered by Advanced AI
+        Real-time AI Risk Assessment
       </span>
       <span class="text-gray-400">|</span>
       <span class="flex items-center gap-2">
         <span class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
-        Predict Default Risk with 94% Accuracy
+        94% Accuracy Rate
       </span>
       <span class="text-gray-400">|</span>
       <span class="flex items-center gap-2">
         <span class="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></span>
-        Behavioral Stability Indicators + Traditional Financial Data
+        Behavioral + Financial Data
       </span>
       <span class="text-gray-400">|</span>
       <span class="flex items-center gap-2">
         <span class="w-2 h-2 bg-pink-400 rounded-full animate-pulse"></span>
-        Legally Compliant & Fully Auditable Risk Scoring
+        Fully Auditable
       </span>
     </span>
   </div>
 </div>
 
 <!-- Stats Cards -->
-<div class="container mx-auto px-6 py-6">
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-    <div class="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-xl p-5">
-      <div class="text-sm text-gray-400 mb-1">Total Applicants</div>
-      <div class="text-3xl font-bold" id="totalApplicants">-</div>
+<div class="px-3 sm:px-6 py-4 sm:py-6">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
+    <div class="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-lg sm:rounded-xl p-3 sm:p-5">
+      <div class="text-xs text-gray-400 mb-1">Total Applicants</div>
+      <div class="text-xl sm:text-3xl font-bold" id="totalApplicants">-</div>
     </div>
-    <div class="bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20 rounded-xl p-5">
-      <div class="text-sm text-gray-400 mb-1">High Risk Cases</div>
-      <div class="text-3xl font-bold text-red-400" id="highRiskCount">-</div>
+    <div class="bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20 rounded-lg sm:rounded-xl p-3 sm:p-5">
+      <div class="text-xs text-gray-400 mb-1">High Risk</div>
+      <div class="text-xl sm:text-3xl font-bold text-red-400" id="highRiskCount">-</div>
     </div>
-    <div class="bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 rounded-xl p-5">
-      <div class="text-sm text-gray-400 mb-1">Average ApexScore</div>
-      <div class="text-3xl font-bold text-green-400" id="avgScore">-</div>
+    <div class="bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 rounded-lg sm:rounded-xl p-3 sm:p-5">
+      <div class="text-xs text-gray-400 mb-1">Avg Score</div>
+      <div class="text-xl sm:text-3xl font-bold text-green-400" id="avgScore">-</div>
     </div>
-    <div class="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl p-5">
-      <div class="text-sm text-gray-400 mb-1">Processing Speed</div>
-      <div class="text-3xl font-bold text-purple-400">&lt;500ms</div>
+    <div class="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-lg sm:rounded-xl p-3 sm:p-5">
+      <div class="text-xs text-gray-400 mb-1">Speed</div>
+      <div class="text-xl sm:text-3xl font-bold text-purple-400">&lt;500ms</div>
     </div>
   </div>
 
   <!-- Info Banner -->
-  <div class="bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-blue-500/30 rounded-xl p-6 mb-6">
-    <h2 class="text-xl font-bold mb-2 flex items-center gap-2">
-      <span class="text-2xl">🚀</span>
-      Welcome to ApexScore – Next-Gen Loan Risk Intelligence
+  <div class="bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-blue-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+    <h2 class="text-base sm:text-xl font-bold mb-2 flex items-center gap-2">
+      <span class="text-xl sm:text-2xl">🚀</span>
+      <span class="text-sm sm:text-xl">Next-Gen Loan Risk Intelligence</span>
     </h2>
-    <p class="text-gray-300 leading-relaxed">
-      Transform your lending decisions with our revolutionary AI-driven risk assessment platform. ApexScore combines traditional financial history with cutting-edge Behavioral Stability Indicators to deliver unmatched accuracy in default prediction. Our proprietary algorithm analyzes location consistency, device stability, SIM changes, and more to provide a comprehensive 0-100 risk score in under 500 milliseconds. Click any applicant below to view their complete risk profile and receive instant action recommendations.
+    <p class="text-xs sm:text-sm text-gray-300 leading-relaxed">
+      AI-driven risk assessment combining traditional financial history with Behavioral Stability Indicators. Get comprehensive 0-100 risk scores in under 500ms with 94% accuracy.
     </p>
   </div>
 
   <!-- Applicants Table -->
-  <div class="bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
-    <div class="px-6 py-4 border-b border-white/10 flex justify-between items-center">
-      <h2 class="text-lg font-bold">Applicant Risk Dashboard</h2>
-      <div class="text-sm text-gray-400">
-        <span id="tableCount">0</span> applicants loaded • Auto-refresh every 3s
+  <div class="bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg sm:rounded-xl overflow-hidden">
+    <div class="px-3 sm:px-6 py-3 sm:py-4 border-b border-white/10 flex justify-between items-center">
+      <h2 class="text-sm sm:text-lg font-bold">Risk Dashboard</h2>
+      <div class="text-xs text-gray-400">
+        <span id="tableCount">0</span> loaded
       </div>
     </div>
     
     <div class="overflow-x-auto">
-      <table class="w-full">
+      <table class="w-full text-xs sm:text-sm">
         <thead>
-          <tr class="text-gray-400 text-sm border-b border-white/10 bg-white/5">
-            <th class="text-left px-6 py-4 font-semibold">Email Address</th>
-            <th class="text-left px-6 py-4 font-semibold">Full Name</th>
-            <th class="text-left px-6 py-4 font-semibold">Phone</th>
-            <th class="text-left px-6 py-4 font-semibold">ISP Provider</th>
-            <th class="text-left px-6 py-4 font-semibold">City</th>
-            <th class="text-left px-6 py-4 font-semibold">Country</th>
-            <th class="text-left px-6 py-4 font-semibold">ApexScore</th>
-            <th class="text-left px-6 py-4 font-semibold">Risk Level</th>
+          <tr class="text-gray-400 border-b border-white/10 bg-white/5">
+            <th class="text-left px-3 sm:px-6 py-2 sm:py-4 font-semibold">Name</th>
+            <th class="text-left px-3 sm:px-6 py-2 sm:py-4 font-semibold hidden sm:table-cell">Email</th>
+            <th class="text-left px-3 sm:px-6 py-2 sm:py-4 font-semibold hidden md:table-cell">City</th>
+            <th class="text-left px-3 sm:px-6 py-2 sm:py-4 font-semibold">Score</th>
+            <th class="text-left px-3 sm:px-6 py-2 sm:py-4 font-semibold">Risk</th>
           </tr>
         </thead>
         <tbody id="table"></tbody>
@@ -174,19 +175,19 @@
 
 <!-- Detail Modal -->
 <div id="detailModal" class="fixed inset-0 bg-black/80 modal-backdrop hidden z-50 overflow-y-auto">
-  <div class="min-h-screen px-4 flex items-center justify-center">
-    <div class="bg-gradient-to-br from-gray-900 to-black border border-white/20 rounded-2xl max-w-5xl w-full my-8 shadow-2xl fade-in">
+  <div class="min-h-screen px-2 sm:px-4 py-4 sm:py-8 flex items-start sm:items-center justify-center">
+    <div class="bg-gradient-to-br from-gray-900 to-black border border-white/20 rounded-xl sm:rounded-2xl max-w-5xl w-full my-4 sm:my-8 shadow-2xl fade-in">
       <!-- Modal Header -->
-      <div class="flex justify-between items-center px-8 py-6 border-b border-white/10">
+      <div class="flex justify-between items-center px-4 sm:px-8 py-4 sm:py-6 border-b border-white/10 sticky top-0 bg-gray-900 rounded-t-xl z-10">
         <div>
-          <h2 class="text-2xl font-bold" id="modalTitle">Applicant Details</h2>
-          <p class="text-sm text-gray-400 mt-1">Complete Risk Assessment Profile</p>
+          <h2 class="text-lg sm:text-2xl font-bold" id="modalTitle">Applicant Details</h2>
+          <p class="text-xs sm:text-sm text-gray-400 mt-1">Complete Risk Profile</p>
         </div>
-        <button id="closeModal" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+        <button id="closeModal" class="text-gray-400 hover:text-white text-2xl sm:text-3xl leading-none">&times;</button>
       </div>
       
       <!-- Modal Content -->
-      <div class="p-8 space-y-6" id="modalContent">
+      <div class="p-4 sm:p-8 space-y-4 sm:space-y-6" id="modalContent">
         <!-- Content populated by JS -->
       </div>
     </div>
@@ -242,15 +243,15 @@ function render() {
     tr.onclick = () => showDetail(a);
     
     tr.innerHTML = `
-      <td class="px-6 py-4 text-sm">${a.email}</td>
-      <td class="px-6 py-4 text-sm font-medium">${a.name.full}</td>
-      <td class="px-6 py-4 text-sm text-gray-400">${a.phone}</td>
-      <td class="px-6 py-4 text-sm">${a.network.isp}</td>
-      <td class="px-6 py-4 text-sm">${a.location.city}</td>
-      <td class="px-6 py-4 text-sm text-gray-400">${a.location.country}</td>
-      <td class="px-6 py-4 text-sm font-bold ${getScoreColor(a.apex_score)}">${a.apex_score}/100</td>
-      <td class="px-6 py-4">
-        <span class="px-3 py-1 rounded-full text-xs font-semibold border ${getRiskColor(a.risk_level)}">
+      <td class="px-3 sm:px-6 py-3 sm:py-4">
+        <div class="font-medium">${a.name.full}</div>
+        <div class="text-xs text-gray-400 sm:hidden">${a.email}</div>
+      </td>
+      <td class="px-3 sm:px-6 py-3 sm:py-4 text-gray-400 hidden sm:table-cell">${a.email}</td>
+      <td class="px-3 sm:px-6 py-3 sm:py-4 hidden md:table-cell">${a.location.city}</td>
+      <td class="px-3 sm:px-6 py-3 sm:py-4 font-bold ${getScoreColor(a.apex_score)}">${a.apex_score}</td>
+      <td class="px-3 sm:px-6 py-3 sm:py-4">
+        <span class="px-2 py-1 rounded-full text-xs font-semibold border ${getRiskColor(a.risk_level)}">
           ${a.risk_level}
         </span>
       </td>
@@ -267,171 +268,135 @@ function showDetail(applicant) {
   
   content.innerHTML = `
     <!-- Score Card -->
-    <div class="bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-xl p-6 text-center">
-      <div class="text-6xl font-black ${getScoreColor(applicant.apex_score)} mb-2">${applicant.apex_score}</div>
-      <div class="text-sm text-gray-400 mb-4">ApexScore Risk Rating</div>
-      <div class="flex gap-3 justify-center">
-        <span class="px-4 py-2 rounded-lg text-sm font-semibold border ${getRiskColor(applicant.risk_level)}">
+    <div class="bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6 text-center">
+      <div class="text-4xl sm:text-6xl font-black ${getScoreColor(applicant.apex_score)} mb-2">${applicant.apex_score}</div>
+      <div class="text-xs sm:text-sm text-gray-400 mb-3 sm:mb-4">ApexScore Risk Rating</div>
+      <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
+        <span class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold border ${getRiskColor(applicant.risk_level)}">
           ${applicant.risk_level} Risk
         </span>
-        <span class="px-4 py-2 rounded-lg text-sm font-semibold bg-white/5 border border-white/10">
+        <span class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold bg-white/5 border border-white/10">
           ${applicant.action_recommendation.recommendation}
         </span>
       </div>
     </div>
 
     <!-- Personal Info -->
-    <div class="grid grid-cols-2 gap-6">
-      <div class="bg-white/5 border border-white/10 rounded-xl p-5">
-        <h3 class="text-sm font-semibold text-gray-400 mb-4">Personal Information</h3>
-        <div class="space-y-3 text-sm">
-          <div><span class="text-gray-400">Email:</span> <span class="font-medium">${applicant.email}</span></div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+      <div class="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-3 sm:p-5">
+        <h3 class="text-xs sm:text-sm font-semibold text-gray-400 mb-3 sm:mb-4">Personal Information</h3>
+        <div class="space-y-2 sm:space-y-3 text-xs sm:text-sm">
+          <div><span class="text-gray-400">Email:</span> <span class="font-medium break-all">${applicant.email}</span></div>
           <div><span class="text-gray-400">Phone:</span> <span class="font-medium">${applicant.phone}</span></div>
           <div><span class="text-gray-400">Occupation:</span> <span class="font-medium">${applicant.occupation}</span></div>
           <div><span class="text-gray-400">SIM Status:</span> <span class="font-medium">${applicant.sim_registration}</span></div>
         </div>
       </div>
 
-      <div class="bg-white/5 border border-white/10 rounded-xl p-5">
-        <h3 class="text-sm font-semibold text-gray-400 mb-4">Location Details</h3>
-        <div class="space-y-3 text-sm">
+      <div class="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-3 sm:p-5">
+        <h3 class="text-xs sm:text-sm font-semibold text-gray-400 mb-3 sm:mb-4">Location Details</h3>
+        <div class="space-y-2 sm:space-y-3 text-xs sm:text-sm">
           <div><span class="text-gray-400">City:</span> <span class="font-medium">${applicant.location.city}</span></div>
           <div><span class="text-gray-400">Country:</span> <span class="font-medium">${applicant.location.country}</span></div>
           <div><span class="text-gray-400">Address:</span> <span class="font-medium">${applicant.location.address}</span></div>
-          <div><span class="text-gray-400">Coordinates:</span> <span class="font-medium">${applicant.location.coordinates.lat}, ${applicant.location.coordinates.lng}</span></div>
+          <div><span class="text-gray-400">Coordinates:</span> <span class="font-medium text-xs">${applicant.location.coordinates.lat}, ${applicant.location.coordinates.lng}</span></div>
         </div>
       </div>
     </div>
 
     <!-- Network & Device -->
-    <div class="grid grid-cols-2 gap-6">
-      <div class="bg-white/5 border border-white/10 rounded-xl p-5">
-        <h3 class="text-sm font-semibold text-gray-400 mb-4">Network Information</h3>
-        <div class="space-y-3 text-sm">
-          <div><span class="text-gray-400">ISP Provider:</span> <span class="font-medium">${applicant.network.isp}</span></div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+      <div class="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-3 sm:p-5">
+        <h3 class="text-xs sm:text-sm font-semibold text-gray-400 mb-3 sm:mb-4">Network Information</h3>
+        <div class="space-y-2 sm:space-y-3 text-xs sm:text-sm">
+          <div><span class="text-gray-400">ISP:</span> <span class="font-medium">${applicant.network.isp}</span></div>
           <div><span class="text-gray-400">IP Address:</span> <span class="font-medium">${applicant.network.ip_address}</span></div>
         </div>
       </div>
 
-      <div class="bg-white/5 border border-white/10 rounded-xl p-5">
-        <h3 class="text-sm font-semibold text-gray-400 mb-4">Device Fingerprint</h3>
-        <div class="space-y-3 text-sm">
-          <div><span class="text-gray-400">Device Type:</span> <span class="font-medium">${applicant.device_fingerprint.device_type}</span></div>
+      <div class="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-3 sm:p-5">
+        <h3 class="text-xs sm:text-sm font-semibold text-gray-400 mb-3 sm:mb-4">Device Fingerprint</h3>
+        <div class="space-y-2 sm:space-y-3 text-xs sm:text-sm">
+          <div><span class="text-gray-400">Type:</span> <span class="font-medium">${applicant.device_fingerprint.device_type}</span></div>
           <div><span class="text-gray-400">Model:</span> <span class="font-medium">${applicant.device_fingerprint.model}</span></div>
-          <div><span class="text-gray-400">OS Version:</span> <span class="font-medium">${applicant.device_fingerprint.os_version}</span></div>
+          <div><span class="text-gray-400">OS:</span> <span class="font-medium">${applicant.device_fingerprint.os_version}</span></div>
           <div><span class="text-gray-400">Rooted:</span> <span class="font-medium">${applicant.device_fingerprint.is_rooted ? 'Yes' : 'No'}</span></div>
-          <div><span class="text-gray-400">VPN Detected:</span> <span class="font-medium">${applicant.device_fingerprint.vpn_detected ? 'Yes' : 'No'}</span></div>
+          <div><span class="text-gray-400">VPN:</span> <span class="font-medium">${applicant.device_fingerprint.vpn_detected ? 'Yes' : 'No'}</span></div>
         </div>
       </div>
     </div>
 
     <!-- BSI Breakdown -->
-    <div class="bg-gradient-to-br from-purple-600/10 to-pink-600/10 border border-purple-500/30 rounded-xl p-6">
-      <h3 class="text-lg font-bold mb-4">Behavioral Stability Indicators (BSI)</h3>
-      <div class="grid grid-cols-3 gap-4">
+    <div class="bg-gradient-to-br from-purple-600/10 to-pink-600/10 border border-purple-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6">
+      <h3 class="text-sm sm:text-lg font-bold mb-3 sm:mb-4">Behavioral Stability Indicators (BSI)</h3>
+      <div class="grid grid-cols-3 gap-2 sm:gap-4">
         <div class="text-center">
-          <div class="text-3xl font-bold ${getScoreColor(applicant.bsi.location_consistency)}">${applicant.bsi.location_consistency}</div>
-          <div class="text-sm text-gray-400 mt-1">Location Consistency</div>
+          <div class="text-2xl sm:text-3xl font-bold ${getScoreColor(applicant.bsi.location_consistency)}">${applicant.bsi.location_consistency}</div>
+          <div class="text-xs text-gray-400 mt-1">Location</div>
         </div>
         <div class="text-center">
-          <div class="text-3xl font-bold ${getScoreColor(applicant.bsi.device_stability)}">${applicant.bsi.device_stability}</div>
-          <div class="text-sm text-gray-400 mt-1">Device Stability</div>
+          <div class="text-2xl sm:text-3xl font-bold ${getScoreColor(applicant.bsi.device_stability)}">${applicant.bsi.device_stability}</div>
+          <div class="text-xs text-gray-400 mt-1">Device</div>
         </div>
         <div class="text-center">
-          <div class="text-3xl font-bold ${getScoreColor(applicant.bsi.sim_changes)}">${applicant.bsi.sim_changes}</div>
-          <div class="text-sm text-gray-400 mt-1">SIM Stability</div>
+          <div class="text-2xl sm:text-3xl font-bold ${getScoreColor(applicant.bsi.sim_changes)}">${applicant.bsi.sim_changes}</div>
+          <div class="text-xs text-gray-400 mt-1">SIM</div>
         </div>
       </div>
     </div>
 
     <!-- Financial Data -->
-    <div class="bg-white/5 border border-white/10 rounded-xl p-6">
-      <h3 class="text-lg font-bold mb-4">Traditional Financial Data (TFD)</h3>
-      <div class="space-y-3 text-sm">
-        <div><span class="text-gray-400">Outstanding Debt:</span> <span class="font-bold text-lg">${applicant.tfd.currency} ${applicant.tfd.outstanding_debt.toLocaleString()}</span></div>
-        <div><span class="text-gray-400">Loan History Records:</span> <span class="font-medium">${applicant.tfd.loan_history.length} entries</span></div>
+    <div class="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-4 sm:p-6">
+      <h3 class="text-sm sm:text-lg font-bold mb-3 sm:mb-4">Traditional Financial Data (TFD)</h3>
+      <div class="space-y-2 sm:space-y-3 text-xs sm:text-sm">
+        <div><span class="text-gray-400">Outstanding Debt:</span> <span class="font-bold text-base sm:text-lg">${applicant.tfd.currency} ${applicant.tfd.outstanding_debt.toLocaleString()}</span></div>
+        <div><span class="text-gray-400">Loan History:</span> <span class="font-medium">${applicant.tfd.loan_history.length} records</span></div>
       </div>
     </div>
 
-    <!-- Bank Accounts -->
-    <div class="bg-white/5 border border-white/10 rounded-xl p-6">
-      <h3 class="text-lg font-bold mb-4">Bank Accounts (${applicant.bank_accounts.length})</h3>
-      <div class="space-y-3">
-        ${applicant.bank_accounts.map(bank => `
-          <div class="flex justify-between items-center bg-white/5 p-4 rounded-lg">
-            <div>
-              <div class="font-semibold">${bank.bank_name}</div>
-              <div class="text-sm text-gray-400">${bank.account_number} • ${bank.account_type}</div>
+    <!-- Loan History -->
+    ${applicant.tfd.loan_history.length > 0 ? `
+    <div class="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-4 sm:p-6">
+      <h3 class="text-sm sm:text-lg font-bold mb-3 sm:mb-4">Loan History (${applicant.tfd.loan_history.length})</h3>
+      <div class="space-y-2 sm:space-y-3">
+        ${applicant.tfd.loan_history.map(loan => `
+          <div class="bg-white/5 p-3 sm:p-4 rounded-lg border border-white/10">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+              <div>
+                <div class="font-semibold text-sm">${loan.institution}</div>
+                <div class="text-xs text-gray-400">${loan.loan_id}</div>
+              </div>
+              <span class="px-2 py-1 rounded text-xs font-semibold w-fit ${
+                loan.status === 'Paid On Time' || loan.status === 'Paid Early' ? 'bg-green-500/20 text-green-400' :
+                loan.status === 'Paid Late' ? 'bg-yellow-500/20 text-yellow-400' :
+                loan.status === 'Defaulted' ? 'bg-red-500/20 text-red-400' :
+                'bg-blue-500/20 text-blue-400'
+              }">
+                ${loan.status}
+              </span>
             </div>
-            <span class="px-3 py-1 rounded-full text-xs font-semibold ${bank.status === 'Active' ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}">
-              ${bank.status}
-            </span>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div><span class="text-gray-400">Amount:</span> ${loan.currency} ${loan.amount.toLocaleString()}</div>
+              <div><span class="text-gray-400">Purpose:</span> ${loan.purpose}</div>
+              <div><span class="text-gray-400">Disbursed:</span> ${loan.disbursement_date}</div>
+              <div><span class="text-gray-400">Due:</span> ${loan.due_date}</div>
+              ${loan.days_overdue ? `<div class="col-span-2"><span class="text-red-400">Days Overdue:</span> ${loan.days_overdue}</div>` : ''}
+              ${loan.repayment_amount ? `<div class="col-span-2"><span class="text-gray-400">Repaid:</span> ${loan.currency} ${loan.repayment_amount.toLocaleString()}</div>` : ''}
+            </div>
           </div>
         `).join('')}
       </div>
     </div>
+    ` : ''}
 
-    <!-- Metadata -->
-    <div class="text-xs text-gray-500 text-center pt-4 border-t border-white/10">
-      Applicant ID: ${applicant.id} • Created: ${new Date(applicant.created_at).toLocaleString()}
-    </div>
-  `;
-  
-  modal.classList.remove('hidden');
-}
-
-document.getElementById('closeModal').onclick = () => {
-  document.getElementById('detailModal').classList.add('hidden');
-};
-
-document.getElementById('detailModal').onclick = (e) => {
-  if (e.target.id === 'detailModal') {
-    document.getElementById('detailModal').classList.add('hidden');
-  }
-};
-
-async function search() {
-  const input = document.getElementById('searchInput');
-  const email = input.value.trim();
-  if (!email) return;
-  
-  try {
-    const res = await fetch(`${API}/api/search?email=${encodeURIComponent(email)}`);
-    const applicant = await res.json();
-    
-    // Remove if exists, add to top
-    data = data.filter(a => a.email.toLowerCase() !== email.toLowerCase());
-    data.unshift(applicant);
-    render();
-    updateStats();
-    
-    // Show detail immediately
-    showDetail(applicant);
-    input.value = '';
-  } catch(e) {
-    alert('Search failed: ' + e.message);
-  }
-}
-
-document.getElementById('searchBtn').onclick = search;
-document.getElementById('searchInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') search();
-});
-
-document.getElementById('statsBtn').onclick = async () => {
-  try {
-    const res = await fetch(`${API}/api/stats`);
-    const stats = await res.json();
-    alert(`📊 System Statistics\n\nTotal Applicants: ${stats.total_applicants}\nActive Defaults: ${stats.active_defaults}\nHigh Risk %: ${stats.high_risk_percentage}`);
-  } catch(e) {
-    alert('Failed to load stats');
-  }
-};
-
-// Initial load and auto-refresh
-load();
-setInterval(load, 3000);
-</script>
-
-</body>
-        </html>
+    <!-- Bank Accounts -->
+    <div class="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-4 sm:p-6">
+      <h3 class="text-sm sm:text-lg font-bold mb-3 sm:mb-4">Bank Accounts (${applicant.bank_accounts.length})</h3>
+      <div class="space-y-2 sm:space-y-3">
+        ${applicant.bank_accounts.map(bank => `
+          <div class="flex justify-between items-center bg-white/5 p-3 sm:p-4 rounded-lg">
+            <div>
+              <div class="font-semibold text-sm">${bank.bank_name}</div>
+              <div class="text-xs text-gray-400">${bank.account_number} • ${bank.account_type}</div>
+            </div>
+            <span class="px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${bank.status === 'Active' ? 'bg-green-500/20 tex
