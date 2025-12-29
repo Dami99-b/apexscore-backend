@@ -23,10 +23,6 @@
   .modal-backdrop {
     backdrop-filter: blur(8px);
   }
-  /* Hide scrollbar for marquee */
-  .marquee-container::-webkit-scrollbar {
-    display: none;
-  }
 </style>
 </head>
 
@@ -160,8 +156,8 @@
       <table class="w-full text-xs sm:text-sm">
         <thead>
           <tr class="text-gray-400 border-b border-white/10 bg-white/5">
-            <th class="text-left px-3 sm:px-6 py-2 sm:py-4 font-semibold">Name</th>
-            <th class="text-left px-3 sm:px-6 py-2 sm:py-4 font-semibold hidden sm:table-cell">Email</th>
+            <th class="text-left px-3 sm:px-6 py-2 sm:py-4 font-semibold">Email Address</th>
+            <th class="text-left px-3 sm:px-6 py-2 sm:py-4 font-semibold">Full Name</th>
             <th class="text-left px-3 sm:px-6 py-2 sm:py-4 font-semibold hidden md:table-cell">City</th>
             <th class="text-left px-3 sm:px-6 py-2 sm:py-4 font-semibold">Score</th>
             <th class="text-left px-3 sm:px-6 py-2 sm:py-4 font-semibold">Risk</th>
@@ -198,15 +194,54 @@
 const API = "https://apexscore.onrender.com";
 let data = [];
 
+// Generate realistic mock emails on frontend until API loads
+function generateMockData() {
+  const firstNames = ["Michael", "Sarah", "David", "Blessing", "Fatima", "Esther", "Joseph", "Daniel", "Grace", "Ahmed", "Linda", "James", "Maria", "John", "Jennifer", "Robert", "Patricia", "Christopher", "Nancy", "Matthew"];
+  const lastNames = ["Anderson", "Brown", "Okoye", "Hassan", "Adeyemi", "Johnson", "Williams", "Jones", "Garcia", "Martinez", "Davis", "Rodriguez", "Miller", "Wilson", "Moore", "Taylor", "Thomas", "Jackson", "White", "Harris"];
+  const domains = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "icloud.com"];
+  const cities = ["Lagos", "New York", "London", "Berlin", "Houston", "Manchester", "Ibadan", "Chicago", "Birmingham", "Hamburg"];
+  
+  const mockData = [];
+  for (let i = 0; i < 50; i++) {
+    const fn = firstNames[Math.floor(Math.random() * firstNames.length)];
+    const ln = lastNames[Math.floor(Math.random() * lastNames.length)];
+    const email = `${fn.toLowerCase()}.${ln.toLowerCase()}${Math.floor(Math.random() * 999)}@${domains[Math.floor(Math.random() * domains.length)]}`;
+    const score = Math.floor(Math.random() * 66) + 30; // 30-95
+    
+    mockData.push({
+      id: `mock-${i}`,
+      email: email,
+      name: {
+        full: `${fn} ${ln}`
+      },
+      location: {
+        city: cities[Math.floor(Math.random() * cities.length)]
+      },
+      apex_score: score,
+      risk_level: score >= 75 ? "Low" : score >= 50 ? "Medium" : "High"
+    });
+  }
+  return mockData;
+}
+
 async function load() {
   try {
     const res = await fetch(`${API}/api/applicants?limit=50`);
     const json = await res.json();
-    data = json.applicants;
+    if (json.applicants && json.applicants.length > 0) {
+      data = json.applicants;
+    } else {
+      // Fallback to mock data if API returns empty
+      data = generateMockData();
+    }
     render();
     updateStats();
   } catch(e) {
-    console.error('Failed to load:', e);
+    console.error('Failed to load from API, using mock data:', e);
+    // Use mock data if API fails
+    data = generateMockData();
+    render();
+    updateStats();
   }
 }
 
@@ -243,13 +278,12 @@ function render() {
     tr.onclick = () => showDetail(a);
     
     tr.innerHTML = `
-      <td class="px-3 sm:px-6 py-3 sm:py-4">
-        <div class="font-medium">${a.name.full}</div>
-        <div class="text-xs text-gray-400 sm:hidden">${a.email}</div>
+      <td class="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">
+        <div class="font-medium">${a.email}</div>
       </td>
-      <td class="px-3 sm:px-6 py-3 sm:py-4 text-gray-400 hidden sm:table-cell">${a.email}</td>
-      <td class="px-3 sm:px-6 py-3 sm:py-4 hidden md:table-cell">${a.location.city}</td>
-      <td class="px-3 sm:px-6 py-3 sm:py-4 font-bold ${getScoreColor(a.apex_score)}">${a.apex_score}</td>
+      <td class="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium">${a.name.full}</td>
+      <td class="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-400 hidden md:table-cell">${a.location.city}</td>
+      <td class="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-bold ${getScoreColor(a.apex_score)}">${a.apex_score}</td>
       <td class="px-3 sm:px-6 py-3 sm:py-4">
         <span class="px-2 py-1 rounded-full text-xs font-semibold border ${getRiskColor(a.risk_level)}">
           ${a.risk_level}
@@ -266,137 +300,109 @@ function showDetail(applicant) {
   
   document.getElementById('modalTitle').textContent = applicant.name.full;
   
-  content.innerHTML = `
-    <!-- Score Card -->
-    <div class="bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6 text-center">
-      <div class="text-4xl sm:text-6xl font-black ${getScoreColor(applicant.apex_score)} mb-2">${applicant.apex_score}</div>
-      <div class="text-xs sm:text-sm text-gray-400 mb-3 sm:mb-4">ApexScore Risk Rating</div>
-      <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
+  // Check if this is full data or mock data
+  const isMockData = !applicant.phone || applicant.id.startsWith('mock-');
+  
+  if (isMockData) {
+    content.innerHTML = `
+      <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 text-center">
+        <p class="text-yellow-400 font-semibold mb-2">⚠️ Limited Preview Data</p>
+        <p class="text-sm text-gray-300">This is a preview record. Full details available when searching by exact email or when API loads complete data.</p>
+      </div>
+      
+      <div class="bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6 text-center">
+        <div class="text-4xl sm:text-6xl font-black ${getScoreColor(applicant.apex_score)} mb-2">${applicant.apex_score}</div>
+        <div class="text-xs sm:text-sm text-gray-400 mb-3 sm:mb-4">ApexScore Risk Rating</div>
         <span class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold border ${getRiskColor(applicant.risk_level)}">
           ${applicant.risk_level} Risk
         </span>
-        <span class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold bg-white/5 border border-white/10">
-          ${applicant.action_recommendation.recommendation}
-        </span>
       </div>
-    </div>
-
-    <!-- Personal Info -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
-      <div class="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-3 sm:p-5">
-        <h3 class="text-xs sm:text-sm font-semibold text-gray-400 mb-3 sm:mb-4">Personal Information</h3>
-        <div class="space-y-2 sm:space-y-3 text-xs sm:text-sm">
-          <div><span class="text-gray-400">Email:</span> <span class="font-medium break-all">${applicant.email}</span></div>
-          <div><span class="text-gray-400">Phone:</span> <span class="font-medium">${applicant.phone}</span></div>
-          <div><span class="text-gray-400">Occupation:</span> <span class="font-medium">${applicant.occupation}</span></div>
-          <div><span class="text-gray-400">SIM Status:</span> <span class="font-medium">${applicant.sim_registration}</span></div>
+      
+      <div class="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
+        <p class="text-gray-400 text-sm">Email: <span class="text-white font-medium">${applicant.email}</span></p>
+        <p class="text-gray-400 text-sm mt-2">Name: <span class="text-white font-medium">${applicant.name.full}</span></p>
+        <p class="text-gray-400 text-sm mt-2">City: <span class="text-white font-medium">${applicant.location.city}</span></p>
+      </div>
+    `;
+  } else {
+    content.innerHTML = `
+      <!-- Score Card -->
+      <div class="bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6 text-center">
+        <div class="text-4xl sm:text-6xl font-black ${getScoreColor(applicant.apex_score)} mb-2">${applicant.apex_score}</div>
+        <div class="text-xs sm:text-sm text-gray-400 mb-3 sm:mb-4">ApexScore Risk Rating</div>
+        <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
+          <span class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold border ${getRiskColor(applicant.risk_level)}">
+            ${applicant.risk_level} Risk
+          </span>
+          <span class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold bg-white/5 border border-white/10">
+            ${applicant.action_recommendation.recommendation}
+          </span>
         </div>
       </div>
 
-      <div class="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-3 sm:p-5">
-        <h3 class="text-xs sm:text-sm font-semibold text-gray-400 mb-3 sm:mb-4">Location Details</h3>
-        <div class="space-y-2 sm:space-y-3 text-xs sm:text-sm">
-          <div><span class="text-gray-400">City:</span> <span class="font-medium">${applicant.location.city}</span></div>
-          <div><span class="text-gray-400">Country:</span> <span class="font-medium">${applicant.location.country}</span></div>
-          <div><span class="text-gray-400">Address:</span> <span class="font-medium">${applicant.location.address}</span></div>
-          <div><span class="text-gray-400">Coordinates:</span> <span class="font-medium text-xs">${applicant.location.coordinates.lat}, ${applicant.location.coordinates.lng}</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Network & Device -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
-      <div class="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-3 sm:p-5">
-        <h3 class="text-xs sm:text-sm font-semibold text-gray-400 mb-3 sm:mb-4">Network Information</h3>
-        <div class="space-y-2 sm:space-y-3 text-xs sm:text-sm">
-          <div><span class="text-gray-400">ISP:</span> <span class="font-medium">${applicant.network.isp}</span></div>
-          <div><span class="text-gray-400">IP Address:</span> <span class="font-medium">${applicant.network.ip_address}</span></div>
-        </div>
-      </div>
-
-      <div class="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-3 sm:p-5">
-        <h3 class="text-xs sm:text-sm font-semibold text-gray-400 mb-3 sm:mb-4">Device Fingerprint</h3>
-        <div class="space-y-2 sm:space-y-3 text-xs sm:text-sm">
-          <div><span class="text-gray-400">Type:</span> <span class="font-medium">${applicant.device_fingerprint.device_type}</span></div>
-          <div><span class="text-gray-400">Model:</span> <span class="font-medium">${applicant.device_fingerprint.model}</span></div>
-          <div><span class="text-gray-400">OS:</span> <span class="font-medium">${applicant.device_fingerprint.os_version}</span></div>
-          <div><span class="text-gray-400">Rooted:</span> <span class="font-medium">${applicant.device_fingerprint.is_rooted ? 'Yes' : 'No'}</span></div>
-          <div><span class="text-gray-400">VPN:</span> <span class="font-medium">${applicant.device_fingerprint.vpn_detected ? 'Yes' : 'No'}</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- BSI Breakdown -->
-    <div class="bg-gradient-to-br from-purple-600/10 to-pink-600/10 border border-purple-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6">
-      <h3 class="text-sm sm:text-lg font-bold mb-3 sm:mb-4">Behavioral Stability Indicators (BSI)</h3>
-      <div class="grid grid-cols-3 gap-2 sm:gap-4">
-        <div class="text-center">
-          <div class="text-2xl sm:text-3xl font-bold ${getScoreColor(applicant.bsi.location_consistency)}">${applicant.bsi.location_consistency}</div>
-          <div class="text-xs text-gray-400 mt-1">Location</div>
-        </div>
-        <div class="text-center">
-          <div class="text-2xl sm:text-3xl font-bold ${getScoreColor(applicant.bsi.device_stability)}">${applicant.bsi.device_stability}</div>
-          <div class="text-xs text-gray-400 mt-1">Device</div>
-        </div>
-        <div class="text-center">
-          <div class="text-2xl sm:text-3xl font-bold ${getScoreColor(applicant.bsi.sim_changes)}">${applicant.bsi.sim_changes}</div>
-          <div class="text-xs text-gray-400 mt-1">SIM</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Financial Data -->
-    <div class="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-4 sm:p-6">
-      <h3 class="text-sm sm:text-lg font-bold mb-3 sm:mb-4">Traditional Financial Data (TFD)</h3>
-      <div class="space-y-2 sm:space-y-3 text-xs sm:text-sm">
-        <div><span class="text-gray-400">Outstanding Debt:</span> <span class="font-bold text-base sm:text-lg">${applicant.tfd.currency} ${applicant.tfd.outstanding_debt.toLocaleString()}</span></div>
-        <div><span class="text-gray-400">Loan History:</span> <span class="font-medium">${applicant.tfd.loan_history.length} records</span></div>
-      </div>
-    </div>
-
-    <!-- Loan History -->
-    ${applicant.tfd.loan_history.length > 0 ? `
-    <div class="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-4 sm:p-6">
-      <h3 class="text-sm sm:text-lg font-bold mb-3 sm:mb-4">Loan History (${applicant.tfd.loan_history.length})</h3>
-      <div class="space-y-2 sm:space-y-3">
-        ${applicant.tfd.loan_history.map(loan => `
-          <div class="bg-white/5 p-3 sm:p-4 rounded-lg border border-white/10">
-            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
-              <div>
-                <div class="font-semibold text-sm">${loan.institution}</div>
-                <div class="text-xs text-gray-400">${loan.loan_id}</div>
-              </div>
-              <span class="px-2 py-1 rounded text-xs font-semibold w-fit ${
-                loan.status === 'Paid On Time' || loan.status === 'Paid Early' ? 'bg-green-500/20 text-green-400' :
-                loan.status === 'Paid Late' ? 'bg-yellow-500/20 text-yellow-400' :
-                loan.status === 'Defaulted' ? 'bg-red-500/20 text-red-400' :
-                'bg-blue-500/20 text-blue-400'
-              }">
-                ${loan.status}
-              </span>
-            </div>
-            <div class="grid grid-cols-2 gap-2 text-xs">
-              <div><span class="text-gray-400">Amount:</span> ${loan.currency} ${loan.amount.toLocaleString()}</div>
-              <div><span class="text-gray-400">Purpose:</span> ${loan.purpose}</div>
-              <div><span class="text-gray-400">Disbursed:</span> ${loan.disbursement_date}</div>
-              <div><span class="text-gray-400">Due:</span> ${loan.due_date}</div>
-              ${loan.days_overdue ? `<div class="col-span-2"><span class="text-red-400">Days Overdue:</span> ${loan.days_overdue}</div>` : ''}
-              ${loan.repayment_amount ? `<div class="col-span-2"><span class="text-gray-400">Repaid:</span> ${loan.currency} ${loan.repayment_amount.toLocaleString()}</div>` : ''}
-            </div>
+      <!-- Personal Info -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+        <div class="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-3 sm:p-5">
+          <h3 class="text-xs sm:text-sm font-semibold text-gray-400 mb-3 sm:mb-4">Personal Information</h3>
+          <div class="space-y-2 sm:space-y-3 text-xs sm:text-sm">
+            <div><span class="text-gray-400">Email:</span> <span class="font-medium break-all">${applicant.email}</span></div>
+            <div><span class="text-gray-400">Phone:</span> <span class="font-medium">${applicant.phone}</span></div>
+            <div><span class="text-gray-400">Occupation:</span> <span class="font-medium">${applicant.occupation}</span></div>
+            <div><span class="text-gray-400">SIM Status:</span> <span class="font-medium">${applicant.sim_registration}</span></div>
           </div>
-        `).join('')}
-      </div>
-    </div>
-    ` : ''}
+        </div>
 
-    <!-- Bank Accounts -->
-    <div class="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-4 sm:p-6">
-      <h3 class="text-sm sm:text-lg font-bold mb-3 sm:mb-4">Bank Accounts (${applicant.bank_accounts.length})</h3>
-      <div class="space-y-2 sm:space-y-3">
-        ${applicant.bank_accounts.map(bank => `
-          <div class="flex justify-between items-center bg-white/5 p-3 sm:p-4 rounded-lg">
-            <div>
-              <div class="font-semibold text-sm">${bank.bank_name}</div>
-              <div class="text-xs text-gray-400">${bank.account_number} • ${bank.account_type}</div>
-            </div>
-            <span class="px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${bank.status === 'Active' ? 'bg-green-500/20 tex
+        <div class="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-3 sm:p-5">
+          <h3 class="text-xs sm:text-sm font-semibold text-gray-400 mb-3 sm:mb-4">Location Details</h3>
+          <div class="space-y-2 sm:space-y-3 text-xs sm:text-sm">
+            <div><span class="text-gray-400">City:</span> <span class="font-medium">${applicant.location.city}</span></div>
+            <div><span class="text-gray-400">Country:</span> <span class="font-medium">${applicant.location.country}</span></div>
+            <div><span class="text-gray-400">Address:</span> <span class="font-medium">${applicant.location.address}</span></div>
+            <div><span class="text-gray-400">Coordinates:</span> <span class="font-medium text-xs">${applicant.location.coordinates.lat}, ${applicant.location.coordinates.lng}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Network & Device -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+        <div class="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-3 sm:p-5">
+          <h3 class="text-xs sm:text-sm font-semibold text-gray-400 mb-3 sm:mb-4">Network Information</h3>
+          <div class="space-y-2 sm:space-y-3 text-xs sm:text-sm">
+            <div><span class="text-gray-400">ISP:</span> <span class="font-medium">${applicant.network.isp}</span></div>
+            <div><span class="text-gray-400">IP Address:</span> <span class="font-medium">${applicant.network.ip_address}</span></div>
+          </div>
+        </div>
+
+        <div class="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-3 sm:p-5">
+          <h3 class="text-xs sm:text-sm font-semibold text-gray-400 mb-3 sm:mb-4">Device Fingerprint</h3>
+          <div class="space-y-2 sm:space-y-3 text-xs sm:text-sm">
+            <div><span class="text-gray-400">Type:</span> <span class="font-medium">${applicant.device_fingerprint.device_type}</span></div>
+            <div><span class="text-gray-400">Model:</span> <span class="font-medium">${applicant.device_fingerprint.model}</span></div>
+            <div><span class="text-gray-400">OS:</span> <span class="font-medium">${applicant.device_fingerprint.os_version}</span></div>
+            <div><span class="text-gray-400">Rooted:</span> <span class="font-medium">${applicant.device_fingerprint.is_rooted ? 'Yes' : 'No'}</span></div>
+            <div><span class="text-gray-400">VPN:</span> <span class="font-medium">${applicant.device_fingerprint.vpn_detected ? 'Yes' : 'No'}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BSI Breakdown -->
+      <div class="bg-gradient-to-br from-purple-600/10 to-pink-600/10 border border-purple-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6">
+        <h3 class="text-sm sm:text-lg font-bold mb-3 sm:mb-4">Behavioral Stability Indicators (BSI)</h3>
+        <div class="grid grid-cols-3 gap-2 sm:gap-4">
+          <div class="text-center">
+            <div class="text-2xl sm:text-3xl font-bold ${getScoreColor(applicant.bsi.location_consistency)}">${applicant.bsi.location_consistency}</div>
+            <div class="text-xs text-gray-400 mt-1">Location</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl sm:text-3xl font-bold ${getScoreColor(applicant.bsi.device_stability)}">${applicant.bsi.device_stability}</div>
+            <div class="text-xs text-gray-400 mt-1">Device</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl sm:text-3xl font-bold ${getScoreColor(applicant.bsi.sim_changes)}">${applicant.bsi.sim_changes}</div>
+            <div class="text-xs text-gray-400 mt-1">SIM</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Data -->
+      <div class="bg-whi
