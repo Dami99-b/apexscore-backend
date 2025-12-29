@@ -1,112 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>ApexScore</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <title>ApexScore – Global Risk Engine</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100">
+<body class="bg-gray-50">
 
 <script>
 const API = "https://apexscore.onrender.com";
-
 let applicants = [];
 
-function riskColor(r){
-  return r==="Low"?"text-green-600":r==="Medium"?"text-amber-600":"text-red-600";
-}
+const badge = r => r==="Low"?"bg-green-100 text-green-700":r==="Medium"?"bg-yellow-100 text-yellow-700":"bg-red-100 text-red-700";
+const scoreColor = s => s>=75?"text-green-600":s>=50?"text-yellow-600":"text-red-600";
 
 async function loadApplicants(){
-  const res = await fetch(`${API}/api/applicants`);
-  const data = await res.json();
-  applicants = data.applicants;
+  const r = await fetch(`${API}/api/applicants?limit=100`);
+  const d = await r.json();
+  applicants = d.applicants;
   render();
 }
 
 async function search(){
-  const email = document.getElementById("q").value.trim();
-  if(!email) return;
-
-  const res = await fetch(`${API}/api/search?email=${encodeURIComponent(email)}`);
-  const data = await res.json();
-
-  applicants.unshift(data);
+  const q = document.getElementById("q").value.trim();
+  if(!q.includes("@")) return alert("Invalid email");
+  const r = await fetch(`${API}/api/search?email=${q}`);
+  const d = await r.json();
+  applicants.unshift(d);
   render();
-  showDetail(data);
+  open(d);
 }
 
 function render(){
-  const t = document.getElementById("tbody");
-  t.innerHTML = "";
+  const tb = document.getElementById("tb");
+  tb.innerHTML="";
   applicants.forEach(a=>{
-    t.innerHTML += `
-    <tr class="hover:bg-gray-50 cursor-pointer" onclick='showDetail(${JSON.stringify(a)})'>
-      <td class="p-3 font-mono">${a.email_masked}</td>
-      <td class="p-3">${a.occupation}</td>
-      <td class="p-3 font-bold ${riskColor(a.risk_level)}">${a.apex_score}</td>
-      <td class="p-3">${a.risk_level}</td>
+    tb.innerHTML+=`
+    <tr onclick='open(${JSON.stringify(a)})' class="hover:bg-gray-100 cursor-pointer">
+      <td class="p-2 font-mono text-xs">${a.email}</td>
+      <td class="p-2 text-xs">${a.name.full}</td>
+      <td class="p-2 text-xs">${a.phone}</td>
+      <td class="p-2 text-xs">${a.network.isp}</td>
+      <td class="p-2 text-xs">${a.location.city}</td>
+      <td class="p-2 text-center">
+        <div class="${scoreColor(a.apex_score)} font-bold">${a.apex_score}</div>
+        <span class="px-2 py-1 text-xs rounded ${badge(a.risk_level)}">${a.risk_level}</span>
+      </td>
     </tr>`;
   });
 }
 
-function showDetail(a){
-  document.getElementById("detail").classList.remove("hidden");
-
-  document.getElementById("d_name").innerText = a.name;
-  document.getElementById("d_email").innerText = a.email;
-  document.getElementById("d_country").innerText = a.country;
-  document.getElementById("d_isp").innerText = a.network.isp;
-  document.getElementById("d_device").innerText = `${a.device.type} • ${a.device.model}`;
-  document.getElementById("d_debt").innerText =
-    `${a.financials.currency} ${a.financials.outstanding_debt}`;
-
-  const banks = document.getElementById("banks");
-  banks.innerHTML="";
-  a.financials.bank_accounts.forEach(b=>{
-    banks.innerHTML += `<li>${b.bank} — *****${b.account_last_5}</li>`;
-  });
+function open(a){
+  document.getElementById("panel").classList.remove("hidden");
+  document.getElementById("json").innerText = JSON.stringify(a,null,2);
 }
 
 setInterval(loadApplicants,3000);
-window.onload = loadApplicants;
+window.onload=loadApplicants;
 </script>
 
-<div class="p-4 bg-white shadow flex gap-2">
-  <input id="q" class="border p-2 flex-1" placeholder="Search email">
-  <button onclick="search()" class="bg-blue-600 text-white px-4">Search</button>
-</div>
+<nav class="bg-white p-4 flex gap-2">
+  <input id="q" class="border px-3 py-2 flex-1" placeholder="Search email" />
+  <button onclick="search()" class="bg-blue-600 text-white px-4 rounded">Search</button>
+</nav>
 
-<div class="p-4">
-<table class="w-full bg-white rounded shadow">
-<thead class="bg-gray-200">
+<div class="p-4 overflow-x-auto">
+<table class="w-full bg-white">
+<thead class="bg-gray-100 text-xs">
 <tr>
-<th class="p-3 text-left">Email</th>
-<th class="p-3">Occupation</th>
-<th class="p-3">Score</th>
-<th class="p-3">Risk</th>
+<th>Email</th><th>Name</th><th>Phone</th><th>ISP</th><th>City</th><th>Score/Risk</th>
 </tr>
 </thead>
-<tbody id="tbody"></tbody>
+<tbody id="tb"></tbody>
 </table>
 </div>
 
-<div id="detail" class="hidden fixed inset-0 bg-black/50">
-<div class="bg-white w-full max-w-lg h-full p-4 overflow-y-auto">
-<button onclick="this.parentElement.parentElement.classList.add('hidden')">Close</button>
-
-<h2 id="d_name" class="font-bold text-xl mt-2"></h2>
-<p id="d_email"></p>
-<p><b>Country:</b> <span id="d_country"></span></p>
-<p><b>ISP:</b> <span id="d_isp"></span></p>
-<p><b>Device:</b> <span id="d_device"></span></p>
-<p><b>Debt:</b> <span id="d_debt"></span></p>
-
-<h3 class="mt-4 font-bold">Linked Accounts</h3>
-<ul id="banks"></ul>
-</div>
+<div id="panel" class="hidden fixed inset-0 bg-black/50">
+  <div class="absolute right-0 w-full max-w-2xl bg-white h-full p-4 overflow-y-auto">
+    <button onclick="panel.classList.add('hidden')" class="mb-2 text-red-600">Close</button>
+    <pre id="json" class="text-xs bg-gray-100 p-3 rounded"></pre>
+  </div>
 </div>
 
 </body>
-</html>
+    </html>
