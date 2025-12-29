@@ -1,88 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>ApexScore – Global Risk Engine</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<title>ApexScore – Global Risk Engine</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-50">
+<body class="bg-gradient-to-br from-slate-900 via-gray-900 to-black text-white">
 
-<script>
-const API = "https://apexscore.onrender.com";
-let applicants = [];
+<header class="p-5 flex justify-between items-center border-b border-white/10">
+  <h1 class="text-2xl font-black tracking-wide">ApexScore</h1>
+  <input id="searchInput" placeholder="Search email…" class="px-3 py-2 rounded text-black w-64">
+</header>
 
-const badge = r => r==="Low"?"bg-green-100 text-green-700":r==="Medium"?"bg-yellow-100 text-yellow-700":"bg-red-100 text-red-700";
-const scoreColor = s => s>=75?"text-green-600":s>=50?"text-yellow-600":"text-red-600";
-
-async function loadApplicants(){
-  const r = await fetch(`${API}/api/applicants?limit=100`);
-  const d = await r.json();
-  applicants = d.applicants;
-  render();
-}
-
-async function search(){
-  const q = document.getElementById("q").value.trim();
-  if(!q.includes("@")) return alert("Invalid email");
-  const r = await fetch(`${API}/api/search?email=${q}`);
-  const d = await r.json();
-  applicants.unshift(d);
-  render();
-  open(d);
-}
-
-function render(){
-  const tb = document.getElementById("tb");
-  tb.innerHTML="";
-  applicants.forEach(a=>{
-    tb.innerHTML+=`
-    <tr onclick='open(${JSON.stringify(a)})' class="hover:bg-gray-100 cursor-pointer">
-      <td class="p-2 font-mono text-xs">${a.email}</td>
-      <td class="p-2 text-xs">${a.name.full}</td>
-      <td class="p-2 text-xs">${a.phone}</td>
-      <td class="p-2 text-xs">${a.network.isp}</td>
-      <td class="p-2 text-xs">${a.location.city}</td>
-      <td class="p-2 text-center">
-        <div class="${scoreColor(a.apex_score)} font-bold">${a.apex_score}</div>
-        <span class="px-2 py-1 text-xs rounded ${badge(a.risk_level)}">${a.risk_level}</span>
-      </td>
-    </tr>`;
-  });
-}
-
-function open(a){
-  document.getElementById("panel").classList.remove("hidden");
-  document.getElementById("json").innerText = JSON.stringify(a,null,2);
-}
-
-setInterval(loadApplicants,3000);
-window.onload=loadApplicants;
-</script>
-
-<nav class="bg-white p-4 flex gap-2">
-  <input id="q" class="border px-3 py-2 flex-1" placeholder="Search email" />
-  <button onclick="search()" class="bg-blue-600 text-white px-4 rounded">Search</button>
-</nav>
-
-<div class="p-4 overflow-x-auto">
-<table class="w-full bg-white">
-<thead class="bg-gray-100 text-xs">
-<tr>
-<th>Email</th><th>Name</th><th>Phone</th><th>ISP</th><th>City</th><th>Score/Risk</th>
+<div class="p-6 overflow-x-auto">
+<table class="w-full text-sm">
+<thead>
+<tr class="text-gray-400 border-b border-white/10">
+<th>Email</th><th>Name</th><th>Phone</th><th>ISP</th><th>City</th><th>Score / Risk</th>
 </tr>
 </thead>
-<tbody id="tb"></tbody>
+<tbody id="table"></tbody>
 </table>
 </div>
 
-<div id="panel" class="hidden fixed inset-0 bg-black/50">
-  <div class="absolute right-0 w-full max-w-2xl bg-white h-full p-4 overflow-y-auto">
-    <button onclick="panel.classList.add('hidden')" class="mb-2 text-red-600">Close</button>
-    <pre id="json" class="text-xs bg-gray-100 p-3 rounded"></pre>
-  </div>
-</div>
+<script>
+const API = "https://apexscore.onrender.com";
+let data = [];
+
+function load() {
+ fetch(`${API}/api/applicants?limit=50`)
+ .then(r=>r.json())
+ .then(d=>{
+  data=d.applicants;
+  render();
+ });
+}
+
+function render(){
+ const t=document.getElementById("table");
+ t.innerHTML="";
+ data.forEach(a=>{
+  const tr=document.createElement("tr");
+  tr.className="border-b border-white/10 hover:bg-white/5 cursor-pointer";
+  tr.onclick=()=>alert(JSON.stringify(a,null,2));
+  tr.innerHTML=`
+   <td>${a.email}</td>
+   <td>${a.name.full}</td>
+   <td>${a.phone}</td>
+   <td>${a.network.isp}</td>
+   <td>${a.location.city}</td>
+   <td>${a.apex_score} – ${a.risk_level}</td>
+  `;
+  t.appendChild(tr);
+ });
+}
+
+document.getElementById("searchInput").addEventListener("keydown",e=>{
+ if(e.key==="Enter"){
+  fetch(`${API}/api/search?email=${e.target.value}`)
+  .then(r=>r.json())
+  .then(a=>{
+    data.unshift(a);
+    render();
+  });
+ }
+});
+
+load();
+setInterval(load,3000);
+</script>
 
 </body>
-    </html>
+</html>
