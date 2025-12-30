@@ -18,6 +18,8 @@ app.add_middleware(
 COUNTRIES = {
     "Nigeria": {
         "code": "+234",
+        "currency": "NGN",
+        "symbol": "₦",
         "banks": ["GTBank", "Access Bank", "First Bank", "Sterling Bank", "UBA", "Opay", "Moniepoint MFB", "PalmPay", "Kuda", "FairMoney"],
         "isps": ["MTN", "Airtel", "Glo", "9mobile"],
         "cities": ["Lagos", "Ibadan", "Abeokuta", "Benin City", "Onitsha"],
@@ -26,6 +28,8 @@ COUNTRIES = {
     },
     "USA": {
         "code": "+1",
+        "currency": "USD",
+        "symbol": "$",
         "banks": ["Chase", "Bank of America", "Wells Fargo", "Capital One"],
         "isps": ["Verizon", "AT&T", "T-Mobile"],
         "cities": ["New York", "Houston", "Chicago", "Dallas", "Los Angeles"],
@@ -34,6 +38,8 @@ COUNTRIES = {
     },
     "UK": {
         "code": "+44",
+        "currency": "GBP",
+        "symbol": "£",
         "banks": ["Barclays", "HSBC", "NatWest", "Monzo", "Revolut"],
         "isps": ["Vodafone", "O2", "EE"],
         "cities": ["London", "Manchester", "Birmingham", "Leeds", "Glasgow"],
@@ -42,6 +48,8 @@ COUNTRIES = {
     },
     "Germany": {
         "code": "+49",
+        "currency": "EUR",
+        "symbol": "€",
         "banks": ["Deutsche Bank", "Commerzbank", "N26"],
         "isps": ["Telekom", "Vodafone DE"],
         "cities": ["Berlin", "Hamburg", "Munich", "Frankfurt", "Cologne"],
@@ -50,6 +58,8 @@ COUNTRIES = {
     },
     "Canada": {
         "code": "+1",
+        "currency": "CAD",
+        "symbol": "C$",
         "banks": ["TD Bank", "RBC", "Scotiabank", "BMO"],
         "isps": ["Rogers", "Bell", "Telus"],
         "cities": ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa"],
@@ -58,6 +68,8 @@ COUNTRIES = {
     },
     "Kenya": {
         "code": "+254",
+        "currency": "KES",
+        "symbol": "KSh",
         "banks": ["Equity Bank", "KCB", "M-Pesa", "Safaricom"],
         "isps": ["Safaricom", "Airtel Kenya", "Telkom"],
         "cities": ["Nairobi", "Mombasa", "Kisumu", "Nakuru", "Eldoret"],
@@ -66,6 +78,8 @@ COUNTRIES = {
     },
     "Ghana": {
         "code": "+233",
+        "currency": "GHS",
+        "symbol": "₵",
         "banks": ["Ecobank", "GCB Bank", "MTN Mobile Money", "Stanbic Bank"],
         "isps": ["MTN Ghana", "Vodafone Ghana", "AirtelTigo"],
         "cities": ["Accra", "Kumasi", "Tamale", "Takoradi", "Cape Coast"],
@@ -74,6 +88,8 @@ COUNTRIES = {
     },
     "South Africa": {
         "code": "+27",
+        "currency": "ZAR",
+        "symbol": "R",
         "banks": ["Standard Bank", "FNB", "Absa", "Capitec"],
         "isps": ["MTN", "Vodacom", "Cell C"],
         "cities": ["Johannesburg", "Cape Town", "Durban", "Pretoria", "Port Elizabeth"],
@@ -82,6 +98,8 @@ COUNTRIES = {
     },
     "India": {
         "code": "+91",
+        "currency": "INR",
+        "symbol": "₹",
         "banks": ["SBI", "HDFC", "ICICI", "Paytm"],
         "isps": ["Jio", "Airtel", "Vi"],
         "cities": ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai"],
@@ -90,6 +108,8 @@ COUNTRIES = {
     },
     "Brazil": {
         "code": "+55",
+        "currency": "BRL",
+        "symbol": "R$",
         "banks": ["Banco do Brasil", "Itaú", "Bradesco", "Nubank"],
         "isps": ["Vivo", "Claro", "TIM"],
         "cities": ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador", "Fortaleza"],
@@ -97,19 +117,6 @@ COUNTRIES = {
         "ios_models": ["iPhone 13", "iPhone 14", "iPhone 11"]
     },
 }
-currency = {
-    "Nigeria": "NGN",
-    "Ghana": "GHS",
-    "Kenya": "KES",
-    "USA": "USD",
-    "UK": "GBP",
-    "Germany": "EUR",
-    "Canada": "CAD",
-    "South Africa": "ZAR",
-    "India": "INR",
-    "Brazil": "BRL",
-}
-
 
 FIRST_NAMES = ["Michael", "David", "Blessing", "Fatima", "Esther", "Joseph", "Daniel", "Grace", "Amara", "Chen", "Raj", "Maria"]
 LAST_NAMES = ["Anderson", "Brown", "Okoye", "Hassan", "Adeyemi", "Johnson", "Silva", "Kumar", "Wang", "Garcia"]
@@ -127,7 +134,7 @@ def generate_email(fn, ln):
     domains = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com"]
     return f"{fn.lower()}{ln.lower()}{random.randint(1, 999)}@{random.choice(domains)}"
 
-def generate_loan_history(num_loans, country_banks, currency):
+def generate_loan_history(num_loans, country_banks, currency_code, currency_symbol):
     """Generate realistic loan history"""
     history = []
     base_date = datetime.datetime.utcnow() - timedelta(days=random.randint(365, 1825))
@@ -147,7 +154,8 @@ def generate_loan_history(num_loans, country_banks, currency):
             "loan_id": f"LN-{uuid.uuid4().hex[:8].upper()}",
             "institution": random.choice(country_banks),
             "amount": amount,
-            "currency": currency,
+            "currency": currency_code,
+            "currency_symbol": currency_symbol,
             "purpose": random.choice(LOAN_PURPOSES),
             "disbursement_date": loan_date.strftime("%Y-%m-%d"),
             "due_date": (loan_date + timedelta(days=random.randint(30, 365))).strftime("%Y-%m-%d"),
@@ -171,7 +179,7 @@ def generate_applicant(email=None):
     score = random.randint(30, 95)
     
     num_loans = random.randint(5, 10)
-    loan_history = generate_loan_history(num_loans, c["banks"], currency)
+    loan_history = generate_loan_history(num_loans, c["banks"], c["currency"], c["symbol"])
     
     # Choose device type first, then match OS and model
     device_type = random.choice(["Android", "iOS"])
@@ -222,7 +230,8 @@ def generate_applicant(email=None):
             "status": random.choice(["Active", "Active", "Active", "Dormant"])
         } for _ in range(random.randint(1, 3))],
         "tfd": {
-            "currency": currency,
+            "currency": c["currency"],
+            "currency_symbol": c["symbol"],
             "outstanding_debt": random.randint(0, 50000),
             "loan_history": loan_history
         },
