@@ -97,7 +97,7 @@ COUNTRIES = {
         "ios_models": ["iPhone 13", "iPhone 14", "iPhone 11"]
     },
 }
-CURRENCIES = {
+currency = {
     "Nigeria": "NGN",
     "Ghana": "GHS",
     "Kenya": "KES",
