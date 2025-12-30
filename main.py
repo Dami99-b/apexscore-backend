@@ -42,9 +42,25 @@ COUNTRIES = {
     },
 }
 
-# expand to 50+ by duplication logic
-while len(COUNTRIES) < 50:
-    COUNTRIES[f"Country{len(COUNTRIES)+1}"] = COUNTRIES["USA"]
+# Expand with realistic country names
+ADDITIONAL_COUNTRIES = [
+    "Canada", "France", "Spain", "Italy", "Japan", "Australia", "Brazil",
+    "Mexico", "India", "South Africa", "Kenya", "Ghana", "Egypt", 
+    "UAE", "Saudi Arabia", "Singapore", "Malaysia", "Thailand", "Vietnam",
+    "Philippines", "Indonesia", "South Korea", "Argentina", "Chile",
+    "Colombia", "Peru", "Poland", "Netherlands", "Belgium", "Sweden",
+    "Norway", "Denmark", "Finland", "Ireland", "Portugal", "Greece",
+    "Turkey", "Israel", "Pakistan", "Bangladesh", "Morocco", "Tunisia",
+    "Algeria", "Ethiopia", "Tanzania", "Uganda"
+]
+
+# Use realistic country names with USA template
+country_templates = ["Nigeria", "USA", "UK", "Germany"]
+for i, country_name in enumerate(ADDITIONAL_COUNTRIES):
+    if len(COUNTRIES) >= 50:
+        break
+    template = COUNTRIES[country_templates[i % len(country_templates)]]
+    COUNTRIES[country_name] = template
 
 FIRST_NAMES = ["Michael", "David", "Blessing", "Fatima", "Esther", "Joseph", "Daniel", "Grace"]
 LAST_NAMES = ["Anderson", "Brown", "Okoye", "Hassan", "Adeyemi", "Johnson"]
@@ -203,4 +219,4 @@ def stats():
         "total_applicants": total,
         "active_defaults": high,
         "high_risk_percentage": f"{int((high/total)*100)}%"
-}
+    }
