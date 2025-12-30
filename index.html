@@ -5,155 +5,203 @@
 <title>ApexScore – AI-Powered Loan Risk Intelligence</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://cdn.tailwindcss.com"></script>
+
 <style>
-@keyframes slideLeft { from {transform:translateX(0)} to {transform:translateX(-50%)} }
-.marquee-content { animation: slideLeft 30s linear infinite }
-.fade-in { animation: fadeIn .4s ease-out }
-@keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
-.modal-backdrop { backdrop-filter: blur(8px) }
+@keyframes slideLeft {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-content {
+  animation: slideLeft 35s linear infinite;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  animation: fadeIn .3s ease-out;
+}
+.modal-backdrop {
+  backdrop-filter: blur(8px);
+}
 </style>
 </head>
 
 <body class="bg-gradient-to-br from-slate-900 via-gray-900 to-black text-white min-h-screen">
 
-<header class="sticky top-0 z-40 bg-black/50 border-b border-white/10 backdrop-blur">
-  <div class="p-4 flex flex-wrap items-center justify-between gap-3">
+<!-- HEADER -->
+<header class="border-b border-white/10 bg-black/40 backdrop-blur sticky top-0 z-40">
+  <div class="px-6 py-4 flex justify-between items-center gap-4">
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-black text-xl">A</div>
+      <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center font-black">A</div>
       <div>
         <h1 class="text-2xl font-black">ApexScore</h1>
         <p class="text-xs text-gray-400">AI Risk Intelligence</p>
       </div>
     </div>
 
-    <div class="flex gap-2 w-full sm:w-auto">
-      <div class="relative flex-1 sm:flex-none">
+    <div class="flex gap-2 items-center">
+      <div class="relative">
         <input id="searchInput" placeholder="Search email..."
-          class="w-full sm:w-64 px-3 py-2 rounded-lg text-black pr-20">
+          class="px-3 py-2 text-sm rounded-lg text-black w-64 pr-20">
         <button id="searchBtn"
-          class="absolute right-1 top-1 px-3 py-1 rounded-md text-sm bg-gradient-to-r from-blue-600 to-purple-600">
+          class="absolute right-1 top-1 px-3 py-1 text-sm rounded-md bg-gradient-to-r from-blue-600 to-purple-600">
           Search
         </button>
       </div>
+      <button id="statsBtn"
+        class="px-3 py-2 text-sm bg-white/5 border border-white/10 rounded-lg">
+        Stats
+      </button>
     </div>
   </div>
 </header>
 
-<div class="px-6 py-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
-  <div class="card"><div>Total Applicants</div><div id="totalApplicants">-</div></div>
-  <div class="card"><div>High Risk</div><div id="highRiskCount">-</div></div>
-  <div class="card"><div>Avg Score</div><div id="avgScore">-</div></div>
-  <div class="card"><div>Speed</div><div>&lt;500ms</div></div>
+<!-- MARQUEE (UNCHANGED LOOK) -->
+<div class="bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 border-y border-white/10 overflow-hidden py-2">
+  <div class="flex whitespace-nowrap marquee-content">
+    <span class="inline-flex gap-8 text-sm">
+      <span>🟢 Real-time AI Risk Assessment</span>
+      <span>|</span>
+      <span>🔵 94% Accuracy Rate</span>
+      <span>|</span>
+      <span>🟣 Behavioral + Financial Data</span>
+      <span>|</span>
+      <span>🟢 Fully Auditable</span>
+      <span>|</span>
+      <span>🔵 Real-time AI Risk Assessment</span>
+      <span>|</span>
+      <span>🟣 94% Accuracy Rate</span>
+    </span>
+  </div>
 </div>
 
-<div class="px-6">
-  <div class="border border-white/10 rounded-xl overflow-hidden">
-    <div class="p-4 border-b border-white/10 flex justify-between">
-      <h2 class="font-bold">Risk Dashboard</h2>
-      <span id="tableCount">0</span>
-    </div>
+<!-- STATS -->
+<div class="px-6 py-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-5">
+    <div class="text-xs text-gray-400">Total Applicants</div>
+    <div id="totalApplicants" class="text-3xl font-bold">-</div>
+  </div>
+  <div class="bg-red-500/10 border border-red-500/20 rounded-xl p-5">
+    <div class="text-xs text-gray-400">High Risk</div>
+    <div id="highRiskCount" class="text-3xl font-bold text-red-400">-</div>
+  </div>
+  <div class="bg-green-500/10 border border-green-500/20 rounded-xl p-5">
+    <div class="text-xs text-gray-400">Avg Score</div>
+    <div id="avgScore" class="text-3xl font-bold text-green-400">-</div>
+  </div>
+  <div class="bg-purple-500/10 border border-purple-500/20 rounded-xl p-5">
+    <div class="text-xs text-gray-400">Speed</div>
+    <div class="text-3xl font-bold text-purple-400">&lt;500ms</div>
+  </div>
+</div>
 
+<!-- TABLE -->
+<div class="px-6 pb-10">
+  <div class="bg-black/40 border border-white/10 rounded-xl overflow-hidden">
+    <div class="px-6 py-4 border-b border-white/10 flex justify-between">
+      <h2 class="font-bold">Risk Dashboard</h2>
+      <span id="tableCount" class="text-xs text-gray-400">0 loaded</span>
+    </div>
     <table class="w-full text-sm">
-      <thead class="bg-white/5 text-gray-400">
+      <thead class="bg-white/5 border-b border-white/10 text-gray-400">
         <tr>
-          <th class="p-3 text-left">Email</th>
-          <th class="p-3 text-left">Name</th>
-          <th class="p-3 text-left hidden md:table-cell">City</th>
-          <th class="p-3 text-left">Score</th>
-          <th class="p-3 text-left">Risk</th>
+          <th class="px-6 py-3 text-left">Email</th>
+          <th class="px-6 py-3 text-left">Name</th>
+          <th class="px-6 py-3 text-left hidden md:table-cell">City</th>
+          <th class="px-6 py-3 text-left">Score</th>
+          <th class="px-6 py-3 text-left">Risk</th>
         </tr>
       </thead>
-      <tbody id="table">
-        <tr><td colspan="5" class="p-6 text-center text-gray-400">Loading applicants…</td></tr>
-      </tbody>
+      <tbody id="table"></tbody>
     </table>
   </div>
 </div>
 
-<div id="detailModal" class="fixed inset-0 hidden bg-black/80 modal-backdrop z-50">
-  <div class="min-h-screen flex justify-center items-center p-4">
-    <div class="bg-gray-900 rounded-xl max-w-5xl w-full border border-white/10 fade-in">
-      <div class="flex justify-between p-4 border-b border-white/10">
-        <h2 id="modalTitle" class="text-xl font-bold"></h2>
-        <button id="closeModal" class="text-2xl">&times;</button>
+<!-- MODAL -->
+<div id="detailModal" class="fixed inset-0 hidden bg-black/80 modal-backdrop z-50 overflow-y-auto">
+  <div class="min-h-screen flex justify-center items-start py-10">
+    <div class="bg-gray-900 border border-white/20 rounded-2xl w-full max-w-5xl fade-in">
+      <div class="px-8 py-6 border-b border-white/10 flex justify-between items-center">
+        <h2 id="modalTitle" class="text-2xl font-bold"></h2>
+        <button id="closeModal" class="text-3xl">&times;</button>
       </div>
-      <div id="modalContent" class="p-6 space-y-4"></div>
+      <div id="modalContent" class="p-8 space-y-6"></div>
     </div>
   </div>
 </div>
 
 <script>
-(() => {
 const API = "https://apexscore.onrender.com";
 let data = [];
 
-const $ = id => document.getElementById(id);
+const riskColor = r => r==="Low"?"text-green-400":r==="Medium"?"text-yellow-400":"text-red-400";
 
-function safe(v, d="—"){ return v ?? d }
+fetch(API+"/api/applicants?limit=40")
+.then(r=>r.json())
+.then(j=>{
+  data=j.applicants||[];
+  render();
+  stats();
+});
 
-function getRiskColor(r){
-  return r==="Low"?"text-green-400":r==="Medium"?"text-yellow-400":"text-red-400";
-}
-
-function load(){
-  fetch(API+"/api/applicants?limit=40")
-    .then(r=>r.json())
-    .then(j=>{
-      data = j.applicants || [];
-      render();
-      updateStats();
-    });
-}
-
-function updateStats(){
-  $("totalApplicants").textContent = data.length;
-  $("highRiskCount").textContent = data.filter(a=>a.risk_level==="High").length;
-  $("avgScore").textContent = Math.round(data.reduce((s,a)=>s+(a.apex_score||0),0)/data.length||0);
-  $("tableCount").textContent = data.length;
+function stats(){
+  totalApplicants.textContent=data.length;
+  highRiskCount.textContent=data.filter(a=>a.risk_level==="High").length;
+  avgScore.textContent=Math.round(data.reduce((s,a)=>s+a.apex_score,0)/data.length);
+  tableCount.textContent=data.length+" loaded";
 }
 
 function render(){
-  const t = $("table"); t.innerHTML="";
+  table.innerHTML="";
   data.forEach(a=>{
     const tr=document.createElement("tr");
     tr.className="border-b border-white/5 hover:bg-white/5 cursor-pointer";
-    tr.onclick=()=>showDetail(a);
+    tr.onclick=()=>openModal(a);
     tr.innerHTML=`
-      <td class="p-3">${safe(a.email)}</td>
-      <td class="p-3">${safe(a.name?.full)}</td>
-      <td class="p-3 hidden md:table-cell">${safe(a.location?.city)}</td>
-      <td class="p-3 ${getRiskColor(a.apex_score>=75?"Low":a.apex_score>=50?"Medium":"High")}">${safe(a.apex_score)}</td>
-      <td class="p-3">${safe(a.risk_level)}</td>`;
-    t.appendChild(tr);
+      <td class="px-6 py-4">${a.email}</td>
+      <td class="px-6 py-4 font-medium">${a.name.full}</td>
+      <td class="px-6 py-4 hidden md:table-cell text-gray-400">${a.location.city}</td>
+      <td class="px-6 py-4 font-bold ${riskColor(a.apex_score)}">${a.apex_score}</td>
+      <td class="px-6 py-4">${a.risk_level}</td>`;
+    table.appendChild(tr);
   });
 }
 
-function searchApplicant(){
-  const email=$("searchInput").value.trim();
-  if(!email)return;
+function openModal(a){
+  detailModal.classList.remove("hidden");
+  modalTitle.textContent=a.name.full;
+  modalContent.innerHTML=`
+    <div class="text-center">
+      <div class="text-6xl font-black ${riskColor(a.apex_score)}">${a.apex_score}</div>
+      <div class="text-gray-400">${a.action_recommendation.recommendation}</div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 text-sm">
+      <div>Email: <b>${a.email}</b></div>
+      <div>Phone: <b>${a.phone}</b></div>
+      <div>Occupation: <b>${a.occupation}</b></div>
+      <div>SIM: <b>${a.sim_registration}</b></div>
+      <div>ISP: <b>${a.network.isp}</b></div>
+      <div>IP: <b>${a.network.ip_address}</b></div>
+      <div>Device: <b>${a.device_fingerprint.model}</b></div>
+      <div>OS: <b>${a.device_fingerprint.os_version}</b></div>
+      <div>Outstanding Debt: <b>$${a.tfd.outstanding_debt.toLocaleString()}</b></div>
+      <div>Total Loans: <b>${a.tfd.loan_history.length}</b></div>
+    </div>
+  `;
+}
+
+closeModal.onclick=()=>detailModal.classList.add("hidden");
+
+searchBtn.onclick=()=>{
+  const email=searchInput.value.trim();
+  if(!email) return alert("Enter email");
   fetch(API+"/api/search?email="+encodeURIComponent(email))
-    .then(r=>r.json())
-    .then(showDetail);
-}
-
-function showDetail(a){
-  $("modalTitle").textContent = safe(a.name?.full);
-  $("modalContent").innerHTML = `
-    <div class="text-5xl font-black ${getRiskColor(a.risk_level)}">${safe(a.apex_score)}</div>
-    <div>Email: ${safe(a.email)}</div>
-    <div>Phone: ${safe(a.phone)}</div>
-    <div>City: ${safe(a.location?.city)}</div>
-    <div>Country: ${safe(a.location?.country)}</div>
-    <div>Loans: ${(a.tfd?.loan_history||[]).length}</div>`;
-  $("detailModal").classList.remove("hidden");
-}
-
-$("closeModal").onclick=()=> $("detailModal").classList.add("hidden");
-$("searchBtn").onclick=searchApplicant;
-$("searchInput").addEventListener("keypress",e=>e.key==="Enter"&&searchApplicant());
-
-load();
-})();
+  .then(r=>r.json())
+  .then(openModal);
+};
 </script>
+
 </body>
-</html>  
+</html>
