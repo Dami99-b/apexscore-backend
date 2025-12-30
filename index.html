@@ -188,22 +188,20 @@
 </div>
 
 <script>
-console.log("✅ JavaScript is running!");
-alert("JavaScript Test - If you see this, JS works!");
-
 const API = "https://apexscore.onrender.com";
 let data = [];
 
+console.log("✅ JS loaded");
+
 async function load() {
-  console.log("🔄 Starting load...");
+  console.log("🔄 Loading...");
   
   try {
-    console.log("📡 Fetching:", API + "/api/applicants?limit=40");
     const res = await fetch(API + "/api/applicants?limit=40");
-    console.log("📥 Response status:", res.status);
+    console.log("📥 Response:", res.status);
     
     const json = await res.json();
-    console.log("✅ JSON:", json);
+    console.log("✅ Data:", json);
     
     if (json.applicants) {
       data = json.applicants;
@@ -213,7 +211,7 @@ async function load() {
     }
   } catch(e) {
     console.error("❌ Error:", e);
-    document.getElementById('table').innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-red-400">ERROR: ' + e.message + '</td></tr>';
+    document.getElementById('table').innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-red-400">ERROR: ' + e.message + '<br><button onclick="load()" class="mt-3 px-4 py-2 bg-blue-600 rounded">Retry</button></td></tr>';
   }
 }
 
@@ -304,7 +302,7 @@ function showDetail(applicant) {
     <div class="bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-xl p-6 text-center">
       <div class="text-6xl font-black ${getScoreColor(applicant.apex_score)} mb-2">${applicant.apex_score}</div>
       <div class="text-sm text-gray-400 mb-4">ApexScore Risk Rating</div>
-      <div class="flex gap-3 justify-center">
+      <div class="flex flex-wrap gap-3 justify-center">
         <span class="px-4 py-2 rounded-lg text-sm font-semibold border ${getRiskColor(applicant.risk_level)}">${applicant.risk_level} Risk</span>
         <span class="px-4 py-2 rounded-lg text-sm font-semibold bg-white/5 border border-white/10">${applicant.action_recommendation.recommendation}</span>
       </div>
@@ -413,4 +411,5 @@ function showDetail(applicant) {
     <div class="bg-white/5 border border-white/10 rounded-xl p-6">
       <h3 class="text-lg font-bold mb-4">Bank Accounts (${applicant.bank_accounts.length})</h3>
       <div class="space-y-2">
-        ${applicant.bank_accounts.map(acc =>
+        ${applicant.bank_accounts.map(acc => `
+          <div class="flex justify-between items-
