@@ -310,13 +310,14 @@ function showDetail(applicant) {
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div class="bg-white/5 border border-white/10 rounded-xl p-5">
         <h3 class="text-sm font-semibold text-gray-400 mb-4">Personal Information</h3>
         <div class="space-y-3 text-sm">
-          <div><span class="text-gray-400">Email:</span> <span class="font-medium">${applicant.email}</span></div>
+          <div><span class="text-gray-400">Email:</span> <span class="font-medium break-all">${applicant.email}</span></div>
           <div><span class="text-gray-400">Phone:</span> <span class="font-medium">${applicant.phone}</span></div>
           <div><span class="text-gray-400">Occupation:</span> <span class="font-medium">${applicant.occupation}</span></div>
+          <div><span class="text-gray-400">SIM Status:</span> <span class="font-medium">${applicant.sim_registration}</span></div>
         </div>
       </div>
 
@@ -325,6 +326,30 @@ function showDetail(applicant) {
         <div class="space-y-3 text-sm">
           <div><span class="text-gray-400">City:</span> <span class="font-medium">${applicant.location.city}</span></div>
           <div><span class="text-gray-400">Country:</span> <span class="font-medium">${applicant.location.country}</span></div>
+          <div><span class="text-gray-400">Address:</span> <span class="font-medium">${applicant.location.address}</span></div>
+          <div><span class="text-gray-400">Coordinates:</span> <span class="font-medium text-xs">${applicant.location.coordinates.lat}, ${applicant.location.coordinates.lng}</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="bg-white/5 border border-white/10 rounded-xl p-5">
+        <h3 class="text-sm font-semibold text-gray-400 mb-4">Network Information</h3>
+        <div class="space-y-3 text-sm">
+          <div><span class="text-gray-400">ISP:</span> <span class="font-medium">${applicant.network.isp}</span></div>
+          <div><span class="text-gray-400">IP Address:</span> <span class="font-medium">${applicant.network.ip_address}</span></div>
+        </div>
+      </div>
+
+      <div class="bg-white/5 border border-white/10 rounded-xl p-5">
+        <h3 class="text-sm font-semibold text-gray-400 mb-4">Device Fingerprint</h3>
+        <div class="space-y-3 text-sm">
+          <div><span class="text-gray-400">Type:</span> <span class="font-medium">${applicant.device_fingerprint.device_type}</span></div>
+          <div><span class="text-gray-400">Model:</span> <span class="font-medium">${applicant.device_fingerprint.model}</span></div>
+          <div><span class="text-gray-400">OS:</span> <span class="font-medium">${applicant.device_fingerprint.os_version}</span></div>
+          <div><span class="text-gray-400">Rooted:</span> <span class="font-medium">${applicant.device_fingerprint.is_rooted ? 'Yes' : 'No'}</span></div>
+          <div><span class="text-gray-400">VPN:</span> <span class="font-medium">${applicant.device_fingerprint.vpn_detected ? 'Yes' : 'No'}</span></div>
+          <div><span class="text-gray-400">Device ID:</span> <span class="font-medium text-xs break-all">${applicant.device_fingerprint.device_id}</span></div>
         </div>
       </div>
     </div>
@@ -357,7 +382,7 @@ function showDetail(applicant) {
 
     ${applicant.tfd.loan_history.length > 0 ? `
       <div class="bg-white/5 border border-white/10 rounded-xl p-6">
-        <h3 class="text-lg font-bold mb-4">Loan History</h3>
+        <h3 class="text-lg font-bold mb-4">Loan History (${applicant.tfd.loan_history.length} loans)</h3>
         <div class="space-y-3">
           ${applicant.tfd.loan_history.map(loan => `
             <div class="bg-black/20 border border-white/5 rounded-lg p-3">
@@ -374,30 +399,18 @@ function showDetail(applicant) {
               <div class="grid grid-cols-2 gap-2 text-xs">
                 <div><span class="text-gray-400">Amount:</span> $${loan.amount.toLocaleString()}</div>
                 <div><span class="text-gray-400">Purpose:</span> ${loan.purpose}</div>
+                <div><span class="text-gray-400">Disbursed:</span> ${loan.disbursement_date}</div>
+                <div><span class="text-gray-400">Due:</span> ${loan.due_date}</div>
+                ${loan.days_overdue ? `<div class="col-span-2"><span class="text-gray-400">Days Overdue:</span> <span class="text-red-400 font-semibold">${loan.days_overdue}</span></div>` : ''}
+                ${loan.repayment_amount ? `<div class="col-span-2"><span class="text-gray-400">Repaid:</span> <span class="text-green-400 font-semibold">$${loan.repayment_amount.toLocaleString()}</span></div>` : ''}
               </div>
             </div>
           `).join('')}
         </div>
       </div>
-    ` : ''}
-  `;
-  
-  modal.classList.remove('hidden');
-}
+    ` : '<div class="bg-white/5 border border-white/10 rounded-xl p-6 text-center text-gray-400">No loan history</div>'}
 
-// Event Listeners
-document.getElementById('searchBtn').onclick = searchApplicant;
-document.getElementById('searchInput').onkeypress = (e) => { if (e.key === 'Enter') searchApplicant(); };
-document.getElementById('closeModal').onclick = () => document.getElementById('detailModal').classList.add('hidden');
-document.getElementById('detailModal').onclick = (e) => { if (e.target.id === 'detailModal') document.getElementById('detailModal').classList.add('hidden'); };
-document.getElementById('statsBtn').onclick = () => alert('Total: ' + data.length + '\nHigh Risk: ' + data.filter(a => a.risk_level === "High").length);
-
-// Auto-refresh every 5 seconds
-setInterval(load, 5000);
-
-// Initial load
-load();
-</script>
-
-</body>
-</html>
+    <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+      <h3 class="text-lg font-bold mb-4">Bank Accounts (${applicant.bank_accounts.length})</h3>
+      <div class="space-y-2">
+        ${applicant.bank_accounts.map(acc =>
