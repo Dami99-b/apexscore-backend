@@ -28,7 +28,7 @@
 
 <body class="bg-gradient-to-br from-slate-900 via-gray-900 to-black text-white min-h-screen">
 
-<!-- Debug Panel (Remove this after testing) -->
+<!-- Debug Panel -->
 <div id="debugPanel" class="fixed bottom-4 right-4 bg-red-900/90 border border-red-500 rounded-lg p-4 max-w-md text-xs z-50 hidden">
   <div class="flex justify-between items-center mb-2">
     <span class="font-bold">🔍 Debug Log</span>
@@ -230,51 +230,58 @@ function debug(message, type = 'info') {
 }
 
 async function load() {
-  debug('Starting to load applicants...', 'info');
+  debug('🔄 Loading applicants from API...', 'info');
   
   try {
-    debug(`Fetching from: ${API}/api/applicants?limit=50`, 'info');
-    const startTime = Date.now();
+    const url = `${API}/api/applicants?limit=40`;
+    debug(`📡 GET ${url}`, 'info');
     
-    const res = await fetch(`${API}/api/applicants?limit=50`);
+    const startTime = Date.now();
+    const res = await fetch(url);
     const fetchTime = Date.now() - startTime;
     
-    debug(`Response received in ${fetchTime}ms - Status: ${res.status}`, res.ok ? 'success' : 'error');
+    debug(`📥 Response: ${res.status} (${fetchTime}ms)`, res.ok ? 'success' : 'error');
     
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}: ${res.statusText}`);
     }
     
     const json = await res.json();
-    debug(`JSON parsed. Keys: ${Object.keys(json).join(', ')}`, 'info');
+    debug(`✅ JSON parsed. Keys: ${Object.keys(json).join(', ')}`, 'success');
     
     if (json.applicants && Array.isArray(json.applicants)) {
-      debug(`Found ${json.applicants.length} applicants`, 'success');
+      debug(`✅ Found ${json.applicants.length} applicants`, 'success');
       data = json.applicants;
       
       if (data.length > 0) {
-        debug(`Sample email: ${data[0].email}`, 'info');
+        debug(`📧 First email: ${data[0].email}`, 'info');
         render();
         updateStats();
       } else {
-        debug('Applicants array is empty!', 'warning');
+        debug('⚠️ Applicants array is empty!', 'warning');
         document.getElementById('table').innerHTML = `
           <tr><td colspan="5" class="px-6 py-8 text-center text-yellow-400">
-            API returned 0 applicants. Check backend.
+            ⚠️ API returned 0 applicants. Database might be empty.
           </td></tr>
         `;
       }
     } else {
-      debug('Response missing "applicants" array', 'error');
-      debug(`Response structure: ${JSON.stringify(json)}`, 'error');
+      debug('❌ Response missing "applicants" array', 'error');
+      throw new Error('Invalid response structure');
     }
   } catch(e) {
-    debug(`ERROR: ${e.message}`, 'error');
+    debug(`❌ ERROR: ${e.message}`, 'error');
     document.getElementById('table').innerHTML = `
       <tr><td colspan="5" class="px-6 py-8 text-center">
         <div class="text-red-400 font-semibold mb-2">⚠️ Connection Failed</div>
-        <div class="text-sm text-gray-400">${e.message}</div>
-        <div class="text-xs text-gray-500 mt-2">Check debug panel for details</div>
+        <div class="text-sm text-gray-400 mb-2">${e.message}</div>
+        <div class="text-xs text-gray-500">Possible causes:</div>
+        <div class="text-xs text-gray-400 mt-1">• Render free tier cold start (wait 30-60s)</div>
+        <div class="text-xs text-gray-400">• CORS policy blocking request</div>
+        <div class="text-xs text-gray-400">• Network connectivity issue</div>
+        <button onclick="load()" class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm">
+          Retry Now
+        </button>
       </td></tr>
     `;
   }
@@ -290,7 +297,7 @@ function updateStats() {
   document.getElementById('avgScore').textContent = avgScore;
   document.getElementById('tableCount').textContent = total;
   
-  debug(`Stats updated: ${total} total, ${highRisk} high risk, ${avgScore} avg`, 'success');
+  debug(`📊 Stats: ${total} total, ${highRisk} high risk, ${avgScore} avg`, 'success');
 }
 
 function getRiskColor(level) {
@@ -309,7 +316,7 @@ function render() {
   const tbody = document.getElementById("table");
   tbody.innerHTML = "";
   
-  debug(`Rendering ${data.length} rows...`, 'info');
+  debug(`🖼️ Rendering ${data.length} rows...`, 'info');
   
   if (data.length === 0) {
     tbody.innerHTML = `
@@ -320,7 +327,7 @@ function render() {
     return;
   }
   
-  data.forEach((a, idx) => {
+  data.forEach((a) => {
     const tr = document.createElement("tr");
     tr.className = "border-b border-white/5 hover:bg-white/5 cursor-pointer transition-all";
     tr.onclick = () => showDetail(a);
@@ -341,40 +348,52 @@ function render() {
     tbody.appendChild(tr);
   });
   
-  debug(`✓ Rendered ${data.length} rows successfully`, 'success');
+  debug(`✅ Rendered ${data.length} rows successfully`, 'success');
 }
 
 // Search functionality
 async function searchApplicant() {
   const email = document.getElementById('searchInput').value.trim();
+  
   if (!email) {
-    alert('Please enter an email address');
+    alert('⚠️ Please enter an email address');
+    debug('⚠️ Search attempted with empty email', 'warning');
     return;
   }
   
-  debug(`Searching for: ${email}`, 'info');
+  debug(`🔍 Searching for: ${email}`, 'info');
   
   try {
-    const res = await fetch(`${API}/api/search?email=${encodeURIComponent(email)}`);
-    debug(`Search response: ${res.status}`, res.ok ? 'success' : 'error');
+    const url = `${API}/api/search?email=${encodeURIComponent(email)}`;
+    debug(`📡 GET ${url}`, 'info');
+    
+    const res = await fetch(url);
+    debug(`📥 Search response: ${res.status}`, res.ok ? 'success' : 'error');
+    
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
     
     const applicant = await res.json();
+    debug(`✅ Response received`, 'success');
     
     if (applicant && applicant.email) {
-      debug(`Found applicant: ${applicant.name.full}`, 'success');
+      debug(`✅ Found: ${applicant.name.full}`, 'success');
       showDetail(applicant);
+      // Clear search input
+      document.getElementById('searchInput').value = '';
     } else {
-      debug('Applicant not found in response', 'warning');
-      alert('Applicant not found');
+      debug('⚠️ Applicant not found or invalid response', 'warning');
+      alert('❌ Applicant not found. Try another email.');
     }
   } catch(e) {
-    debug(`Search error: ${e.message}`, 'error');
-    alert('Search failed. Please try again.');
+    debug(`❌ Search error: ${e.message}`, 'error');
+    alert(`Search failed: ${e.message}\n\nCheck debug panel for details.`);
   }
 }
 
 function showDetail(applicant) {
-  debug(`Opening detail for: ${applicant.email}`, 'info');
+  debug(`📋 Opening detail for: ${applicant.email}`, 'info');
   const modal = document.getElementById('detailModal');
   const content = document.getElementById('modalContent');
   
@@ -433,16 +452,4 @@ function showDetail(applicant) {
         <div class="space-y-2 sm:space-y-3 text-xs sm:text-sm">
           <div><span class="text-gray-400">Type:</span> <span class="font-medium">${applicant.device_fingerprint.device_type}</span></div>
           <div><span class="text-gray-400">Model:</span> <span class="font-medium">${applicant.device_fingerprint.model}</span></div>
-          <div><span class="text-gray-400">OS:</span> <span class="font-medium">${applicant.device_fingerprint.os_version}</span></div>
-          <div><span class="text-gray-400">Rooted:</span> <span class="font-medium">${applicant.device_fingerprint.is_rooted ? 'Yes' : 'No'}</span></div>
-          <div><span class="text-gray-400">VPN:</span> <span class="font-medium">${applicant.device_fingerprint.vpn_detected ? 'Yes' : 'No'}</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- BSI Breakdown -->
-    <div class="bg-gradient-to-br from-purple-600/10 to-pink-600/10 border border-purple-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6">
-      <h3 class="text-sm sm:text-lg font-bold mb-3 sm:mb-4">Behavioral Stability Indicators (BSI)</h3>
-      <div class="grid grid-cols-3 gap-2 sm:gap-4">
-        <div class="text-center">
-          <div class="te
+          <div><span class="text-gray-400">OS:</span> <span class="font-medium">${applicant.device_f
