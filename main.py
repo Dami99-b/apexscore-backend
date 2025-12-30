@@ -97,6 +97,19 @@ COUNTRIES = {
         "ios_models": ["iPhone 13", "iPhone 14", "iPhone 11"]
     },
 }
+CURRENCIES = {
+    "Nigeria": "NGN",
+    "Ghana": "GHS",
+    "Kenya": "KES",
+    "USA": "USD",
+    "UK": "GBP",
+    "Germany": "EUR",
+    "Canada": "CAD",
+    "South Africa": "ZAR",
+    "India": "INR",
+    "Brazil": "BRL",
+}
+
 
 FIRST_NAMES = ["Michael", "David", "Blessing", "Fatima", "Esther", "Joseph", "Daniel", "Grace", "Amara", "Chen", "Raj", "Maria"]
 LAST_NAMES = ["Anderson", "Brown", "Okoye", "Hassan", "Adeyemi", "Johnson", "Silva", "Kumar", "Wang", "Garcia"]
@@ -114,7 +127,7 @@ def generate_email(fn, ln):
     domains = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com"]
     return f"{fn.lower()}{ln.lower()}{random.randint(1, 999)}@{random.choice(domains)}"
 
-def generate_loan_history(num_loans, country_banks):
+def generate_loan_history(num_loans, country_banks, currency):
     """Generate realistic loan history"""
     history = []
     base_date = datetime.datetime.utcnow() - timedelta(days=random.randint(365, 1825))
@@ -134,7 +147,7 @@ def generate_loan_history(num_loans, country_banks):
             "loan_id": f"LN-{uuid.uuid4().hex[:8].upper()}",
             "institution": random.choice(country_banks),
             "amount": amount,
-            "currency": "USD",
+            "currency": currency,
             "purpose": random.choice(LOAN_PURPOSES),
             "disbursement_date": loan_date.strftime("%Y-%m-%d"),
             "due_date": (loan_date + timedelta(days=random.randint(30, 365))).strftime("%Y-%m-%d"),
@@ -157,8 +170,8 @@ def generate_applicant(email=None):
     email = email or generate_email(fn, ln)
     score = random.randint(30, 95)
     
-    num_loans = random.randint(0, 5)
-    loan_history = generate_loan_history(num_loans, c["banks"])
+    num_loans = random.randint(5, 10)
+    loan_history = generate_loan_history(num_loans, c["banks"], currency)
     
     # Choose device type first, then match OS and model
     device_type = random.choice(["Android", "iOS"])
@@ -209,7 +222,7 @@ def generate_applicant(email=None):
             "status": random.choice(["Active", "Active", "Active", "Dormant"])
         } for _ in range(random.randint(1, 3))],
         "tfd": {
-            "currency": "USD",
+            "currency": currency,
             "outstanding_debt": random.randint(0, 50000),
             "loan_history": loan_history
         },
