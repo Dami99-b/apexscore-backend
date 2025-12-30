@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ApexScore</title>
+<title>ApexScore – AI-Powered Loan Risk Intelligence</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://cdn.tailwindcss.com"></script>
-
 <style>
 @keyframes slideLeft {
   from { transform: translateX(0); }
@@ -14,187 +13,404 @@
 .marquee-content {
   animation: slideLeft 30s linear infinite;
 }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
 </style>
 </head>
 
-<body class="bg-slate-950 text-white overflow-x-hidden">
+<body class="bg-gradient-to-br from-slate-900 via-gray-900 to-black text-white min-h-screen">
 
 <!-- HEADER -->
-<header class="sticky top-0 z-40 bg-black/70 backdrop-blur border-b border-white/10">
-  <div class="max-w-6xl mx-auto px-3 py-3 flex items-center justify-between">
-    <div>
-      <h1 class="text-lg font-black">ApexScore</h1>
-      <p class="text-[10px] text-gray-400">AI Loan Risk Intelligence</p>
-    </div>
+<header class="sticky top-0 z-40 bg-black/40 backdrop-blur-sm border-b border-white/10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+          <span class="text-xl font-black">A</span>
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-black tracking-tight">ApexScore</h1>
+          <p class="text-xs text-gray-400">AI Risk Intelligence</p>
+        </div>
+      </div>
 
-    <div class="flex gap-1">
-      <input id="searchInput" class="text-black text-xs px-2 py-1 rounded w-36"
-        placeholder="email search">
-      <button id="searchBtn"
-        class="text-xs px-2 py-1 rounded bg-blue-600">
-        Search
-      </button>
+      <div class="flex gap-2 w-full sm:w-auto">
+        <div class="relative flex-1 sm:flex-none">
+          <input id="searchInput" 
+            class="text-black text-sm px-3 py-2 rounded-lg w-full sm:w-64 pr-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Search email...">
+          <button id="searchBtn"
+            class="absolute right-1 top-1 text-sm px-3 py-1 rounded-md bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all">
+            Search
+          </button>
+        </div>
+        <button id="statsBtn" class="px-3 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-all whitespace-nowrap">
+          Stats
+        </button>
+      </div>
     </div>
   </div>
 </header>
 
 <!-- MARQUEE -->
-<div class="border-y border-white/10 bg-white/5 overflow-hidden">
-  <div class="flex whitespace-nowrap marquee-content text-xs py-1 gap-6 px-4">
-    <span>AI Risk Assessment</span><span>|</span>
-    <span>94% Accuracy</span><span>|</span>
-    <span>Behavioral + Financial</span><span>|</span>
-    <span>Sub-500ms</span><span>|</span>
-    <span>Fully Auditable</span>
+<div class="bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 border-y border-white/10 overflow-hidden py-2">
+  <div class="flex whitespace-nowrap marquee-content">
+    <span class="inline-flex items-center gap-8 text-xs sm:text-sm">
+      <span class="flex items-center gap-2">
+        <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+        Real-time AI Risk Assessment
+      </span>
+      <span class="text-gray-400">|</span>
+      <span class="flex items-center gap-2">
+        <span class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
+        94% Accuracy Rate
+      </span>
+      <span class="text-gray-400">|</span>
+      <span class="flex items-center gap-2">
+        <span class="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></span>
+        Behavioral + Financial Data
+      </span>
+      <span class="text-gray-400">|</span>
+      <span class="flex items-center gap-2">
+        <span class="w-2 h-2 bg-pink-400 rounded-full animate-pulse"></span>
+        Fully Auditable
+      </span>
+      <span class="text-gray-400">|</span>
+      <span class="flex items-center gap-2">
+        <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+        Real-time AI Risk Assessment
+      </span>
+      <span class="text-gray-400">|</span>
+      <span class="flex items-center gap-2">
+        <span class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
+        94% Accuracy Rate
+      </span>
+    </span>
   </div>
 </div>
 
 <!-- DASHBOARD -->
-<div class="max-w-6xl mx-auto px-3 py-4">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
 
-  <!-- STATS -->
-  <div class="grid grid-cols-3 gap-2 text-center mb-4">
-    <div class="bg-white/5 rounded p-2">
-      <div class="text-xs text-gray-400">Applicants</div>
-      <div id="totalApplicants" class="font-bold">-</div>
+  <!-- STATS CARDS -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-xl p-5">
+      <div class="text-xs text-gray-400 mb-1">Total Applicants</div>
+      <div id="totalApplicants" class="text-3xl font-bold">-</div>
     </div>
-    <div class="bg-white/5 rounded p-2">
-      <div class="text-xs text-gray-400">High Risk</div>
-      <div id="highRiskCount" class="font-bold text-red-400">-</div>
+    <div class="bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20 rounded-xl p-5">
+      <div class="text-xs text-gray-400 mb-1">High Risk</div>
+      <div id="highRiskCount" class="text-3xl font-bold text-red-400">-</div>
     </div>
-    <div class="bg-white/5 rounded p-2">
-      <div class="text-xs text-gray-400">Avg Score</div>
-      <div id="avgScore" class="font-bold text-green-400">-</div>
+    <div class="bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 rounded-xl p-5">
+      <div class="text-xs text-gray-400 mb-1">Avg Score</div>
+      <div id="avgScore" class="text-3xl font-bold text-green-400">-</div>
+    </div>
+    <div class="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl p-5">
+      <div class="text-xs text-gray-400 mb-1">Speed</div>
+      <div class="text-3xl font-bold text-purple-400">&lt;500ms</div>
     </div>
   </div>
 
+  <!-- INFO BANNER -->
+  <div class="bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-blue-500/30 rounded-xl p-6 mb-6">
+    <h2 class="text-xl font-bold mb-2 flex items-center gap-2">
+      <span class="text-2xl">🚀</span>
+      Next-Gen Loan Risk Intelligence
+    </h2>
+    <p class="text-sm text-gray-300 leading-relaxed">
+      AI-driven risk assessment combining traditional financial history with Behavioral Stability Indicators. Get comprehensive 0-100 risk scores in under 500ms with 94% accuracy.
+    </p>
+  </div>
+
   <!-- TABLE -->
-  <div class="bg-black/40 border border-white/10 rounded overflow-hidden">
-    <table class="w-full text-xs">
-      <thead class="bg-white/5 text-gray-400">
-        <tr>
-          <th class="p-2 text-left">Email</th>
-          <th class="p-2 text-left">Name</th>
-          <th class="p-2">Score</th>
-          <th class="p-2">Risk</th>
-        </tr>
-      </thead>
-      <tbody id="table"></tbody>
-    </table>
+  <div class="bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+    <div class="px-6 py-4 border-b border-white/10 flex justify-between items-center">
+      <h2 class="text-lg font-bold">Risk Dashboard</h2>
+      <div class="text-xs text-gray-400"><span id="tableCount">0</span> loaded</div>
+    </div>
+    
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-gray-400 border-b border-white/10 bg-white/5">
+            <th class="text-left px-6 py-4 font-semibold">Email Address</th>
+            <th class="text-left px-6 py-4 font-semibold">Full Name</th>
+            <th class="text-left px-6 py-4 font-semibold hidden md:table-cell">City</th>
+            <th class="text-left px-6 py-4 font-semibold">Score</th>
+            <th class="text-left px-6 py-4 font-semibold">Risk</th>
+          </tr>
+        </thead>
+        <tbody id="table">
+          <tr><td colspan="5" class="px-6 py-8 text-center text-gray-400">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
 <!-- MODAL -->
-<div id="modal" class="fixed inset-0 hidden bg-black/80 overflow-y-auto z-50">
-  <div class="max-w-3xl mx-auto p-3">
-    <div class="bg-slate-900 border border-white/10 rounded">
-      <div class="flex justify-between items-center border-b border-white/10 p-3">
-        <h2 id="modalTitle" class="font-bold text-sm"></h2>
-        <button onclick="closeModal()" class="text-xl">&times;</button>
+<div id="modal" class="fixed inset-0 hidden bg-black/80 backdrop-blur-sm overflow-y-auto z-50">
+  <div class="min-h-screen px-4 py-8 flex items-start sm:items-center justify-center">
+    <div class="bg-gradient-to-br from-gray-900 to-black border border-white/20 rounded-2xl max-w-5xl w-full shadow-2xl fade-in">
+      <div class="flex justify-between items-center px-8 py-6 border-b border-white/10 sticky top-0 bg-gray-900 rounded-t-2xl z-10">
+        <div>
+          <h2 id="modalTitle" class="text-2xl font-bold">Applicant Details</h2>
+          <p class="text-sm text-gray-400 mt-1">Complete Risk Profile</p>
+        </div>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
       </div>
-      <div id="modalBody" class="p-3 space-y-4 text-xs"></div>
+      <div id="modalBody" class="p-8 space-y-6 text-sm"></div>
     </div>
   </div>
 </div>
 
 <script>
 const API = "https://apexscore.onrender.com";
-let data=[];
+let data = [];
 
-fetch(API+"/api/applicants?limit=40")
-.then(r=>r.json())
-.then(j=>{
-  data=j.applicants;
-  renderTable();
-  renderStats();
-});
-
-function renderStats(){
-  totalApplicants.textContent=data.length;
-  highRiskCount.textContent=data.filter(a=>a.risk_level==="High").length;
-  avgScore.textContent=Math.round(
-    data.reduce((s,a)=>s+a.apex_score,0)/data.length
-  );
+function getRiskColor(level) {
+  if (level === "Low") return "bg-green-500/20 text-green-400 border-green-500/30";
+  if (level === "Medium") return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+  return "bg-red-500/20 text-red-400 border-red-500/30";
 }
 
-function renderTable(){
-  table.innerHTML="";
-  data.forEach(a=>{
-    const tr=document.createElement("tr");
-    tr.className="border-b border-white/5 hover:bg-white/5 cursor-pointer";
-    tr.onclick=()=>openModal(a);
-    tr.innerHTML=`
-      <td class="p-2">${a.email}</td>
-      <td class="p-2">${a.name.full}</td>
-      <td class="p-2 text-center">${a.apex_score}</td>
-      <td class="p-2 text-center">${a.risk_level}</td>
+function getScoreColor(score) {
+  if (score >= 75) return "text-green-400";
+  if (score >= 50) return "text-yellow-400";
+  return "text-red-400";
+}
+
+fetch(API + "/api/applicants?limit=40")
+  .then(r => r.json())
+  .then(j => {
+    data = j.applicants;
+    renderTable();
+    renderStats();
+  })
+  .catch(e => {
+    document.getElementById('table').innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-red-400">Failed to load data</td></tr>';
+  });
+
+function renderStats() {
+  const total = data.length;
+  const highRisk = data.filter(a => a.risk_level === "High").length;
+  const avgScore = total > 0 ? Math.round(data.reduce((s, a) => s + a.apex_score, 0) / total) : 0;
+  
+  document.getElementById('totalApplicants').textContent = total;
+  document.getElementById('highRiskCount').textContent = highRisk;
+  document.getElementById('avgScore').textContent = avgScore;
+  document.getElementById('tableCount').textContent = total;
+}
+
+function renderTable() {
+  const tbody = document.getElementById('table');
+  tbody.innerHTML = "";
+  
+  data.forEach(a => {
+    const tr = document.createElement("tr");
+    tr.className = "border-b border-white/5 hover:bg-white/5 cursor-pointer transition-all";
+    tr.onclick = () => openModal(a);
+    
+    tr.innerHTML = `
+      <td class="px-6 py-4"><div class="font-medium">${a.email}</div></td>
+      <td class="px-6 py-4 font-medium">${a.name.full}</td>
+      <td class="px-6 py-4 text-gray-400 hidden md:table-cell">${a.location.city}</td>
+      <td class="px-6 py-4 font-bold ${getScoreColor(a.apex_score)}">${a.apex_score}</td>
+      <td class="px-6 py-4">
+        <span class="px-2 py-1 rounded-full text-xs font-semibold border ${getRiskColor(a.risk_level)}">
+          ${a.risk_level}
+        </span>
+      </td>
     `;
-    table.appendChild(tr);
+    tbody.appendChild(tr);
   });
 }
 
-function openModal(a){
-  modal.classList.remove("hidden");
-  modalTitle.textContent=a.name.full;
+function openModal(a) {
+  document.getElementById('modal').classList.remove("hidden");
+  document.getElementById('modalTitle').textContent = a.name.full;
 
-  modalBody.innerHTML=`
-<b>ID:</b> ${a.id}<br>
-<b>Email:</b> ${a.email}<br>
-<b>Phone:</b> ${a.phone}<br>
-<b>Occupation:</b> ${a.occupation}<br>
-<b>SIM:</b> ${a.sim_registration}<br><br>
+  document.getElementById('modalBody').innerHTML = `
+    <!-- Score Card -->
+    <div class="bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-xl p-6 text-center">
+      <div class="text-6xl font-black ${getScoreColor(a.apex_score)} mb-2">${a.apex_score}</div>
+      <div class="text-sm text-gray-400 mb-4">ApexScore Risk Rating</div>
+      <div class="flex flex-wrap gap-3 justify-center">
+        <span class="px-4 py-2 rounded-lg font-semibold border ${getRiskColor(a.risk_level)}">${a.risk_level} Risk</span>
+        <span class="px-4 py-2 rounded-lg font-semibold bg-white/5 border border-white/10">${a.action_recommendation.recommendation}</span>
+      </div>
+    </div>
 
-<b>Location:</b><br>
-${a.location.address}, ${a.location.city}, ${a.location.country}<br>
-Lat: ${a.location.coordinates.lat}, Lng: ${a.location.coordinates.lng}<br><br>
+    <!-- Personal & Location -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="bg-white/5 border border-white/10 rounded-xl p-5">
+        <h3 class="font-semibold text-gray-400 mb-4">Personal Information</h3>
+        <div class="space-y-3">
+          <div><span class="text-gray-400">Email:</span> <span class="font-medium break-all">${a.email}</span></div>
+          <div><span class="text-gray-400">Phone:</span> <span class="font-medium">${a.phone}</span></div>
+          <div><span class="text-gray-400">Occupation:</span> <span class="font-medium">${a.occupation}</span></div>
+          <div><span class="text-gray-400">SIM Status:</span> <span class="font-medium">${a.sim_registration}</span></div>
+        </div>
+      </div>
 
-<b>Network:</b><br>
-ISP: ${a.network.isp}<br>
-IP: ${a.network.ip_address}<br><br>
+      <div class="bg-white/5 border border-white/10 rounded-xl p-5">
+        <h3 class="font-semibold text-gray-400 mb-4">Location</h3>
+        <div class="space-y-3">
+          <div><span class="text-gray-400">City:</span> <span class="font-medium">${a.location.city}</span></div>
+          <div><span class="text-gray-400">Country:</span> <span class="font-medium">${a.location.country}</span></div>
+          <div><span class="text-gray-400">Address:</span> <span class="font-medium">${a.location.address}</span></div>
+          <div><span class="text-gray-400">Coordinates:</span> <span class="font-medium text-xs">${a.location.coordinates.lat}, ${a.location.coordinates.lng}</span></div>
+        </div>
+      </div>
+    </div>
 
-<b>Device:</b><br>
-${a.device_fingerprint.device_type} – ${a.device_fingerprint.model}<br>
-OS: ${a.device_fingerprint.os_version}<br>
-Rooted: ${a.device_fingerprint.is_rooted}<br>
-VPN: ${a.device_fingerprint.vpn_detected}<br>
-Device ID: ${a.device_fingerprint.device_id}<br><br>
+    <!-- Network & Device -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="bg-white/5 border border-white/10 rounded-xl p-5">
+        <h3 class="font-semibold text-gray-400 mb-4">Network Information</h3>
+        <div class="space-y-3">
+          <div><span class="text-gray-400">ISP:</span> <span class="font-medium">${a.network.isp}</span></div>
+          <div><span class="text-gray-400">IP Address:</span> <span class="font-medium">${a.network.ip_address}</span></div>
+        </div>
+      </div>
 
-<b>BSI:</b><br>
-Location: ${a.bsi.location_consistency}<br>
-Device: ${a.bsi.device_stability}<br>
-SIM: ${a.bsi.sim_changes}<br><br>
+      <div class="bg-white/5 border border-white/10 rounded-xl p-5">
+        <h3 class="font-semibold text-gray-400 mb-4">Device Fingerprint</h3>
+        <div class="space-y-3">
+          <div><span class="text-gray-400">Type:</span> <span class="font-medium">${a.device_fingerprint.device_type}</span></div>
+          <div><span class="text-gray-400">Model:</span> <span class="font-medium">${a.device_fingerprint.model}</span></div>
+          <div><span class="text-gray-400">OS:</span> <span class="font-medium">${a.device_fingerprint.os_version}</span></div>
+          <div><span class="text-gray-400">Rooted:</span> <span class="font-medium">${a.device_fingerprint.is_rooted ? 'Yes' : 'No'}</span></div>
+          <div><span class="text-gray-400">VPN:</span> <span class="font-medium">${a.device_fingerprint.vpn_detected ? 'Yes' : 'No'}</span></div>
+          <div><span class="text-gray-400">Device ID:</span> <span class="font-medium text-xs break-all">${a.device_fingerprint.device_id}</span></div>
+        </div>
+      </div>
+    </div>
 
-<b>Bank Accounts:</b><br>
-${a.bank_accounts.map(b=>`
-${b.bank_name} (${b.account_type}) – ${b.account_number} [${b.status}]
-`).join("<br>")}<br><br>
+    <!-- BSI -->
+    <div class="bg-gradient-to-br from-purple-600/10 to-pink-600/10 border border-purple-500/30 rounded-xl p-6">
+      <h3 class="text-lg font-bold mb-4">Behavioral Stability Indicators</h3>
+      <div class="grid grid-cols-3 gap-4">
+        <div class="text-center">
+          <div class="text-3xl font-bold ${getScoreColor(a.bsi.location_consistency)}">${a.bsi.location_consistency}</div>
+          <div class="text-xs text-gray-400 mt-1">Location</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold ${getScoreColor(a.bsi.device_stability)}">${a.bsi.device_stability}</div>
+          <div class="text-xs text-gray-400 mt-1">Device</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold ${getScoreColor(a.bsi.sim_changes)}">${a.bsi.sim_changes}</div>
+          <div class="text-xs text-gray-400 mt-1">SIM</div>
+        </div>
+      </div>
+    </div>
 
-<b>Financial:</b><br>
-Currency: ${a.tfd.currency}<br>
-Outstanding Debt: $${a.tfd.outstanding_debt}<br>
-Loans: ${a.tfd.loan_history.length}<br><br>
+    <!-- Financial Overview -->
+    <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+      <h3 class="text-lg font-bold mb-4">Financial Overview</h3>
+      <div class="space-y-3">
+        <div><span class="text-gray-400">Currency:</span> <span class="font-medium">${a.tfd.currency}</span></div>
+        <div><span class="text-gray-400">Outstanding Debt:</span> <span class="font-bold text-red-400">${a.tfd.currency_symbol}${a.tfd.outstanding_debt.toLocaleString()}</span></div>
+        <div><span class="text-gray-400">Total Loans:</span> <span class="font-medium">${a.tfd.loan_history.length}</span></div>
+      </div>
+    </div>
 
-<b>Loans:</b><br>
-${a.tfd.loan_history.map(l=>`
-${l.loan_id} | ${l.institution} | $${l.amount} | ${l.status}
-`).join("<br>")}<br><br>
+    <!-- Loan History -->
+    ${a.tfd.loan_history.length > 0 ? `
+      <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+        <h3 class="text-lg font-bold mb-4">Loan History (${a.tfd.loan_history.length} loans)</h3>
+        <div class="space-y-3 max-h-96 overflow-y-auto">
+          ${a.tfd.loan_history.map(l => {
+            const statusColor = (l.status === 'Paid On Time' || l.status === 'Paid Early') ? 'bg-green-500/20 text-green-400' : (l.status === 'Defaulted' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400');
+            return `
+              <div class="bg-black/20 border border-white/5 rounded-lg p-3">
+                <div class="flex justify-between items-start mb-2">
+                  <div>
+                    <div class="font-semibold">${l.institution}</div>
+                    <div class="text-xs text-gray-400">${l.loan_id}</div>
+                  </div>
+                  <span class="px-2 py-1 rounded text-xs ${statusColor}">${l.status}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                  <div><span class="text-gray-400">Amount:</span> ${l.currency_symbol}${l.amount.toLocaleString()}</div>
+                  <div><span class="text-gray-400">Purpose:</span> ${l.purpose}</div>
+                  <div><span class="text-gray-400">Disbursed:</span> ${l.disbursement_date}</div>
+                  <div><span class="text-gray-400">Due:</span> ${l.due_date}</div>
+                  ${l.days_overdue ? `<div class="col-span-2"><span class="text-gray-400">Days Overdue:</span> <span class="text-red-400 font-semibold">${l.days_overdue}</span></div>` : ''}
+                  ${l.repayment_amount ? `<div class="col-span-2"><span class="text-gray-400">Repaid:</span> <span class="text-green-400 font-semibold">${l.currency_symbol}${l.repayment_amount.toLocaleString()}</span></div>` : ''}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    ` : '<div class="bg-white/5 border border-white/10 rounded-xl p-6 text-center text-gray-400">No loan history</div>'}
 
-<b>Decision:</b> ${a.action_recommendation.recommendation}<br>
-<b>Created:</b> ${a.created_at}
-`;
+    <!-- Bank Accounts -->
+    <div class="bg-white/5 border border-white/10 rounded-xl p-6">
+      <h3 class="text-lg font-bold mb-4">Bank Accounts (${a.bank_accounts.length})</h3>
+      <div class="space-y-2">
+        ${a.bank_accounts.map(b => `
+          <div class="flex justify-between items-center bg-black/20 border border-white/5 rounded-lg p-3">
+            <div>
+              <div class="font-medium">${b.bank_name}</div>
+              <div class="text-xs text-gray-400">Account: ${b.account_number} • ${b.account_type}</div>
+            </div>
+            <span class="text-xs px-2 py-1 rounded ${b.status === 'Active' ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}">${b.status}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- Footer Info -->
+    <div class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 text-center text-xs text-gray-400">
+      <div>Applicant ID: <span class="text-white font-mono">${a.id}</span></div>
+      <div class="mt-1">Created: ${new Date(a.created_at).toLocaleString()}</div>
+    </div>
+  `;
 }
 
-function closeModal(){
-  modal.classList.add("hidden");
+function closeModal() {
+  document.getElementById('modal').classList.add("hidden");
 }
 
-searchBtn.onclick=()=>{
-  const email=searchInput.value.trim();
-  if(!email) return alert("Enter email");
-  fetch(API+"/api/search?email="+encodeURIComponent(email))
-  .then(r=>r.json())
-  .then(openModal);
+document.getElementById('searchBtn').onclick = () => {
+  const email = document.getElementById('searchInput').value.trim();
+  if (!email) return alert("Enter email");
+  
+  fetch(API + "/api/search?email=" + encodeURIComponent(email))
+    .then(r => r.json())
+    .then(openModal)
+    .catch(e => alert("Search failed"));
 };
+
+document.getElementById('searchInput').onkeypress = (e) => {
+  if (e.key === 'Enter') document.getElementById('searchBtn').click();
+};
+
+document.getElementById('statsBtn').onclick = () => {
+  const total = data.length;
+  const highRisk = data.filter(a => a.risk_level === "High").length;
+  const avgScore = total > 0 ? Math.round(data.reduce((s, a) => s + a.apex_score, 0) / total) : 0;
+  alert('📊 ApexScore Statistics\n\nTotal Applicants: ' + total + '\nHigh Risk: ' + highRisk + '\nAverage Score: ' + avgScore);
+};
+
+setInterval(() => {
+  fetch(API + "/api/applicants?limit=40")
+    .then(r => r.json())
+    .then(j => {
+      data = j.applicants;
+      renderTable();
+      renderStats();
+    });
+}, 5000);
 </script>
 
 </body>
