@@ -1,6 +1,6 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-import random, uuid, datetime
+import random, uuid, datetime, re
 from datetime import timedelta
 
 app = FastAPI(title="ApexScore API")
@@ -126,13 +126,175 @@ JOBS = ["Trader", "Farmer", "POS Agent", "Ride-hailing Driver", "Market Vendor",
 LOAN_PURPOSES = ["Business Expansion", "Education", "Medical Emergency", "Rent Payment", "Inventory Purchase", "Equipment", "Working Capital", "Personal Use"]
 REPAYMENT_STATUS = ["Paid On Time", "Paid Early", "Paid Late", "Defaulted", "Restructured", "Active"]
 
+VALID_EMAIL_DOMAINS = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "icloud.com"]
+
 DATABASE = {}
 
 # -------------------- HELPERS --------------------
 
+def is_valid_email(email):
+    """Validate email format and domain"""
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(pattern, email):
+        return False
+    domain = email.split('@')[1].lower()
+    return domain in VALID_EMAIL_DOMAINS
+
 def generate_email(fn, ln):
-    domains = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com"]
-    return f"{fn.lower()}{ln.lower()}{random.randint(1, 999)}@{random.choice(domains)}"
+    return f"{fn.lower()}{ln.lower()}{random.randint(1, 999)}@{random.choice(VALID_EMAIL_DOMAINS)}"
+
+def calculate_bsi_scores(loan_history, has_defaults):
+    """Calculate BSI scores based on risk factors"""
+    # Location consistency: higher if stable, lower if risky
+    location_consistency = random.randint(70, 95) if not has_defaults else random.randint(30, 60)
+    
+    # Device stability: higher if stable, lower if risky
+    device_stability = random.randint(65, 95) if not has_defaults else random.randint(30, 65)
+    
+    # SIM changes: higher score = more stable (fewer changes)
+    sim_changes = random.randint(60, 95) if not has_defaults else random.randint(10, 50)
+    
+    return location_consistency, device_stability, sim_changes
+
+def calculate_apex_score(bsi_location, bsi_device, bsi_sim, outstanding_debt, loan_history):
+    """Calculate ApexScore based on PRD formula: BSI + TFD weighted"""
+    # BSI component (60% weight): average of the three BSI scores
+    bsi_average = (bsi_location + bsi_device + bsi_sim) / 3
+    bsi_component = bsi_average * 0.6
+    
+    # TFD component (40% weight)
+    tfd_score = 50  # Base score
+    
+    # Analyze loan history
+    if loan_history:
+        paid_on_time = sum(1 for loan in loan_history if loan['status'] in ['Paid On Time', 'Paid Early'])
+        total_completed = sum(1 for loan in loan_history if loan['status'] in ['Paid On Time', 'Paid Early', 'Paid Late'])
+        defaults = sum(1 for loan in loan_history if loan['status'] == 'Defaulted')
+        active_loans = sum(1 for loan in loan_history if loan['status'] == 'Active')
+        
+        if total_completed > 0:
+            repayment_rate = paid_on_time / total_completed
+            tfd_score = repayment_rate * 100
+        
+        # Penalize for defaults
+        if defaults > 0:
+            tfd_score -= (defaults * 15)
+        
+        # Slight penalty for too many active loans
+        if active_loans > 2:
+            tfd_score -= 5
+    
+    # Debt penalty
+    if outstanding_debt > 30000:
+        tfd_score -= 10
+    elif outstanding_debt > 15000:
+        tfd_score -= 5
+    
+    tfd_score = max(0, min(100, tfd_score))
+    tfd_component = tfd_score * 0.4
+    
+    # Final ApexScore
+    apex_score = int(bsi_component + tfd_component)
+    return max(30, min(95, apex_score))
+
+def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_location, bsi_device, bsi_sim, currency_symbol):
+    """Generate AI lending recommendation based on comprehensive analysis"""
+    # Calculate repayment history quality
+    if loan_history:
+        paid_on_time = sum(1 for loan in loan_history if loan['status'] in ['Paid On Time', 'Paid Early'])
+        total_loans = len(loan_history)
+        defaults = sum(1 for loan in loan_history if loan['status'] == 'Defaulted')
+        active_loans = sum(1 for loan in loan_history if loan['status'] == 'Active')
+        
+        # Calculate average loan amount from history
+        avg_loan = sum(loan['amount'] for loan in loan_history) / len(loan_history) if loan_history else 0
+    else:
+        paid_on_time = 0
+        total_loans = 0
+        defaults = 0
+        active_loans = 0
+        avg_loan = 0
+    
+    # Base recommendation on ApexScore
+    if apex_score >= 75:
+        # Low Risk
+        max_loan = int(avg_loan * 1.5) if avg_loan > 0 else 10000
+        if outstanding_debt > 0:
+            max_loan = int(max_loan * 0.7)  # Reduce if existing debt
+        
+        recommendation = {
+            "decision": "Approve",
+            "recommended_loan_amount": max_loan,
+            "max_loan_amount": int(max_loan * 1.3),
+            "interest_rate_range": "8-12%",
+            "repayment_period": "6-12 months",
+            "reasoning": [
+                f"Excellent ApexScore of {apex_score}/100 indicates low default risk",
+                f"Strong BSI metrics: Location ({bsi_location}), Device ({bsi_device}), SIM ({bsi_sim})",
+                f"Positive repayment history: {paid_on_time}/{total_loans} loans paid on time" if total_loans > 0 else "No negative history detected",
+                f"Current debt level: {currency_symbol}{outstanding_debt:,} is manageable" if outstanding_debt < 20000 else f"Consider existing debt of {currency_symbol}{outstanding_debt:,}"
+            ],
+            "conditions": [
+                "Verify income documentation",
+                "Confirm current employment status",
+                "Standard collateral may be waived for amounts under " + f"{currency_symbol}5,000"
+            ]
+        }
+    
+    elif apex_score >= 50:
+        # Medium Risk
+        max_loan = int(avg_loan * 0.8) if avg_loan > 0 else 5000
+        if outstanding_debt > 10000:
+            max_loan = int(max_loan * 0.5)
+        
+        recommendation = {
+            "decision": "Review Required",
+            "recommended_loan_amount": max_loan,
+            "max_loan_amount": int(max_loan * 1.2),
+            "interest_rate_range": "15-20%",
+            "repayment_period": "3-6 months",
+            "reasoning": [
+                f"Moderate ApexScore of {apex_score}/100 requires careful assessment",
+                f"BSI indicators show mixed stability: Location ({bsi_location}), Device ({bsi_device}), SIM ({bsi_sim})",
+                f"Repayment history: {paid_on_time}/{total_loans} on-time payments" if total_loans > 0 else "Limited credit history",
+                f"Outstanding debt of {currency_symbol}{outstanding_debt:,} requires monitoring" if outstanding_debt > 0 else "No current outstanding debt"
+            ],
+            "conditions": [
+                "Mandatory income verification required",
+                "Collateral or guarantor recommended",
+                f"Limit loan to {currency_symbol}{max_loan:,} maximum",
+                "Weekly repayment schedule recommended",
+                "Consider shorter loan term to reduce risk"
+            ]
+        }
+    
+    else:
+        # High Risk
+        max_loan = 2000 if defaults == 0 else 1000
+        
+        recommendation = {
+            "decision": "Reject / Micro-loan Only",
+            "recommended_loan_amount": max_loan,
+            "max_loan_amount": max_loan,
+            "interest_rate_range": "25-30%",
+            "repayment_period": "1-3 months",
+            "reasoning": [
+                f"Low ApexScore of {apex_score}/100 indicates high default risk",
+                f"Weak BSI indicators: Location ({bsi_location}), Device ({bsi_device}), SIM ({bsi_sim})",
+                f"Concerning repayment history: {defaults} default(s) detected" if defaults > 0 else f"Poor payment history: only {paid_on_time}/{total_loans} paid on time",
+                f"High outstanding debt: {currency_symbol}{outstanding_debt:,}" if outstanding_debt > 15000 else "Multiple risk factors identified"
+            ],
+            "conditions": [
+                "Only micro-loans under " + f"{currency_symbol}{max_loan:,} considered",
+                "Strong collateral mandatory",
+                "Co-signer/guarantor required",
+                "Daily or weekly repayment only",
+                "GPS-enabled device tracking agreement",
+                "Alternative: Recommend financial counseling first"
+            ]
+        }
+    
+    return recommendation
 
 def generate_loan_history(num_loans, country_banks, currency_code, currency_symbol):
     """Generate realistic loan history"""
@@ -176,10 +338,19 @@ def generate_applicant(email=None):
     mid = random.choice(MIDDLE_NAMES)
 
     email = email or generate_email(fn, ln)
-    score = random.randint(30, 95)
     
     num_loans = random.randint(5, 10)
     loan_history = generate_loan_history(num_loans, c["banks"], c["currency"], c["symbol"])
+    
+    # Check if there are defaults in history
+    has_defaults = any(loan['status'] == 'Defaulted' for loan in loan_history)
+    outstanding_debt = random.randint(0, 50000)
+    
+    # Calculate BSI scores based on risk profile
+    bsi_location, bsi_device, bsi_sim = calculate_bsi_scores(loan_history, has_defaults)
+    
+    # Calculate ApexScore properly
+    apex_score = calculate_apex_score(bsi_location, bsi_device, bsi_sim, outstanding_debt, loan_history)
     
     # Choose device type first, then match OS and model
     device_type = random.choice(["Android", "iOS"])
@@ -189,6 +360,14 @@ def generate_applicant(email=None):
     else:
         model = random.choice(c["ios_models"])
         os_version = random.choice(["iOS 16", "iOS 15", "iOS 17"])
+    
+    # Generate realistic IP that may or may not match location
+    city_name = random.choice(c["cities"])
+    ip_matches_location = random.random() > 0.3  # 70% match rate
+    
+    # Generate last login times
+    last_email_login = (datetime.datetime.utcnow() - timedelta(hours=random.randint(1, 48))).isoformat()
+    last_sim_activity = (datetime.datetime.utcnow() - timedelta(hours=random.randint(1, 72))).isoformat()
 
     applicant = {
         "id": str(uuid.uuid4()),
@@ -202,7 +381,7 @@ def generate_applicant(email=None):
         "phone": f"{c['code']} {random.randint(700000000, 999999999)}",
         "occupation": random.choice(JOBS),
         "location": {
-            "city": random.choice(c["cities"]),
+            "city": city_name,
             "country": country,
             "address": f"{random.randint(10, 300)} Main Street",
             "coordinates": {
@@ -212,9 +391,16 @@ def generate_applicant(email=None):
         },
         "network": {
             "isp": random.choice(c["isps"]),
-            "ip_address": f"{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}"
+            "ip_address": f"{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}",
+            "ip_location": city_name if ip_matches_location else random.choice(c["cities"]),
+            "ip_matches_declared_address": ip_matches_location
         },
-        "sim_registration": random.choice(["VERIFIED", "UNVERIFIED"]),
+        "sim_registration": random.choice(["VERIFIED", "VERIFIED", "VERIFIED", "UNVERIFIED"]),  # 75% verified, 25% unverified
+        "activity_log": {
+            "last_email_login": last_email_login,
+            "last_sim_activity": last_sim_activity,
+            "email_sim_sync": abs((datetime.datetime.fromisoformat(last_email_login) - datetime.datetime.fromisoformat(last_sim_activity)).total_seconds()) < 86400  # Within 24 hours
+        },
         "device_fingerprint": {
             "device_id": str(uuid.uuid4()),
             "device_type": device_type,
@@ -232,19 +418,19 @@ def generate_applicant(email=None):
         "tfd": {
             "currency": c["currency"],
             "currency_symbol": c["symbol"],
-            "outstanding_debt": random.randint(0, 50000),
+            "outstanding_debt": outstanding_debt,
             "loan_history": loan_history
         },
         "bsi": {
-            "location_consistency": random.randint(30, 95),
-            "device_stability": random.randint(30, 95),
-            "sim_changes": random.randint(10, 90)
+            "location_consistency": bsi_location,
+            "device_stability": bsi_device,
+            "sim_changes": bsi_sim,
+            "ip_region_match": 90 if ip_matches_location else random.randint(30, 60),
+            "travel_frequency": random.randint(40, 95)
         },
-        "apex_score": score,
-        "risk_level": "Low" if score >= 75 else "Medium" if score >= 50 else "High",
-        "action_recommendation": {
-            "recommendation": "Approve" if score >= 75 else "Review" if score >= 50 else "Reject"
-        },
+        "apex_score": apex_score,
+        "risk_level": "Low" if apex_score >= 75 else "Medium" if apex_score >= 50 else "High",
+        "action_recommendation": generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_location, bsi_device, bsi_sim, c["symbol"]),
         "created_at": datetime.datetime.utcnow().isoformat()
     }
 
@@ -259,7 +445,7 @@ for _ in range(150):
 
 @app.get("/")
 def root():
-    return {"status": "ApexScore API running"}
+    return {"status": "ApexScore API running", "version": "2.0"}
 
 @app.get("/api/applicants")
 def list_applicants(limit: int = 50):
@@ -267,21 +453,8 @@ def list_applicants(limit: int = 50):
 
 @app.get("/api/search")
 def search(email: str = Query(...)):
-    for a in DATABASE.values():
-        if a["email"].lower() == email.lower():
-            return a
-    return generate_applicant(email)
-
-@app.get("/api/applicant/{id}")
-def get_applicant(id: str):
-    return DATABASE.get(id)
-
-@app.get("/api/stats")
-def stats():
-    total = len(DATABASE)
-    high = len([a for a in DATABASE.values() if a["risk_level"] == "High"])
-    return {
-        "total_applicants": total,
-        "active_defaults": high,
-        "high_risk_percentage": f"{int((high/total)*100)}%"
-    }
+    # Validate email format and domain
+    if not is_valid_email(email):
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid email format or domain. Only {', '.j
