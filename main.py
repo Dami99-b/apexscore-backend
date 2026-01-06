@@ -240,6 +240,7 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
                 f"Standard collateral may be waived for amounts under {currency_symbol}5,000"
             ]
         }
+        }
     
     elif apex_score >= 50:
         # Medium Risk
@@ -267,6 +268,7 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
                 "Consider shorter loan term to reduce risk"
             ]
         }
+        }
     
     else:
         # High Risk
@@ -285,7 +287,7 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
                 f"High outstanding debt: {currency_symbol}{outstanding_debt:,}" if outstanding_debt > 15000 else "Multiple risk factors identified"
             ],
             "conditions": [
-                f"Only micro-loans under {currency_symbol}{max_loan:,} considered",
+                "Only micro-loans under " + f"{currency_symbol}{max_loan:,} considered",
                 "Strong collateral mandatory",
                 "Co-signer/guarantor required",
                 "Daily or weekly repayment only",
@@ -459,4 +461,4 @@ def search(email: str = Query(...)):
     if not is_valid_email(email):
         raise HTTPException(
             status_code=400, 
-            detail=f"Invalid email format or domain. Only {', '.
+            detail=f"Invalid email form
