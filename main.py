@@ -337,7 +337,9 @@ def generate_applicant(email=None):
     ln = random.choice(LAST_NAMES)
     mid = random.choice(MIDDLE_NAMES)
 
-    email = email or generate_email(fn, ln)
+    # Use provided email or generate new one
+    if email is None:
+        email = generate_email(fn, ln)
     
     num_loans = random.randint(5, 10)
     loan_history = generate_loan_history(num_loans, c["banks"], c["currency"], c["symbol"])
@@ -457,6 +459,4 @@ def search(email: str = Query(...)):
     if not is_valid_email(email):
         raise HTTPException(
             status_code=400, 
-            detail=f"Invalid email format or domain. Only {', '.join(VALID_EMAIL_DOMAINS)} are accepted."
-)
-        
+            detail=f"Invalid email format or domain. O
