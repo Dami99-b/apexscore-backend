@@ -395,11 +395,11 @@ def generate_applicant(email=None):
             "ip_location": city_name if ip_matches_location else random.choice(c["cities"]),
             "ip_matches_declared_address": ip_matches_location
         },
-        "sim_registration": random.choice(["VERIFIED", "VERIFIED", "VERIFIED", "UNVERIFIED"]),  # 75% verified, 25% unverified
+        "sim_registration": random.choice(["VERIFIED", "VERIFIED", "VERIFIED", "UNVERIFIED"]),
         "activity_log": {
             "last_email_login": last_email_login,
             "last_sim_activity": last_sim_activity,
-            "email_sim_sync": abs((datetime.datetime.fromisoformat(last_email_login) - datetime.datetime.fromisoformat(last_sim_activity)).total_seconds()) < 86400  # Within 24 hours
+            "email_sim_sync": abs((datetime.datetime.fromisoformat(last_email_login) - datetime.datetime.fromisoformat(last_sim_activity)).total_seconds()) < 86400
         },
         "device_fingerprint": {
             "device_id": str(uuid.uuid4()),
@@ -457,4 +457,6 @@ def search(email: str = Query(...)):
     if not is_valid_email(email):
         raise HTTPException(
             status_code=400, 
-            detail=f"Invalid email format or domain. Only {', '.j
+            detail=f"Invalid email format or domain. Only {', '.join(VALID_EMAIL_DOMAINS)} are accepted."
+)
+        
