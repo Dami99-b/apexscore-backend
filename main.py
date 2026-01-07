@@ -229,7 +229,7 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
             ],
             "conditions": [
                 f"MUST clear at least 50% of outstanding debt ({currency_symbol}{int(outstanding_debt*0.5):,}) before reapplication",
-                "Only micro-loans under {0} considered after debt clearance".format(f"{currency_symbol}{max_loan:,}"),
+                f"Only micro-loans under {currency_symbol}{max_loan:,} considered after debt clearance",
                 "Strong collateral (2x loan value) mandatory",
                 "Co-signer with verified income required",
                 "Daily repayment with GPS tracking",
@@ -306,7 +306,7 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
                 "Loan application REJECTED",
                 f"Must resolve all {defaults} defaulted loans before reapplication",
                 f"Clear outstanding debt below {currency_symbol}5,000",
-                "After clearance, only micro-loans (max {0}) with 200% collateral".format(f"{currency_symbol}{max_loan}"),
+                f"After clearance, only micro-loans (max {currency_symbol}{max_loan}) with 200% collateral",
                 "Credit counseling mandatory",
                 "6-month cooling period with no new defaults required"
             ]
@@ -440,4 +440,4 @@ def generate_applicant(email=None):
             "currency": c["currency"],
             "currency_symbol": c["symbol"],
             "outstanding_debt": outstanding_debt,
-  
+            "loan_history": lo
