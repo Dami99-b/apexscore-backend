@@ -156,23 +156,35 @@ def calculate_apex_score(bsi_location, bsi_device, bsi_sim, outstanding_debt, lo
     
     if loan_history:
         paid_on_time = sum(1 for loan in loan_history if loan['status'] in ['Paid On Time', 'Paid Early'])
-        total_completed = sum(1 for loan in loan_history if loan['status'] in ['Paid On Time', 'Paid Early', 'Paid Late'])
+        total_completed = sum(1 for loan in loan_history if loan['status'] in ['Paid On Time', 'Paid Early', 'Paid Late', 'Defaulted', 'Restructured'])
         defaults = sum(1 for loan in loan_history if loan['status'] == 'Defaulted')
         active_loans = sum(1 for loan in loan_history if loan['status'] == 'Active')
+        restructured = sum(1 for loan in loan_history if loan['status'] == 'Restructured')
         
         if total_completed > 0:
             repayment_rate = paid_on_time / total_completed
             tfd_score = repayment_rate * 100
         
+        # Heavy penalty for defaults - this is critical
         if defaults > 0:
-            tfd_score -= (defaults * 15)
+            tfd_score -= (defaults * 20)  # Increased from 15 to 20
         
+        # Penalty for restructured loans
+        if restructured > 0:
+            tfd_score -= (restructured * 10)
+        
+        # Penalty for too many active loans
         if active_loans > 2:
-            tfd_score -= 5
+            tfd_score -= 10
     
-    if outstanding_debt > 30000:
-        tfd_score -= 10
+    # Much harsher debt penalties
+    if outstanding_debt > 50000:
+        tfd_score -= 25
+    elif outstanding_debt > 30000:
+        tfd_score -= 15
     elif outstanding_debt > 15000:
+        tfd_score -= 10
+    elif outstanding_debt > 5000:
         tfd_score -= 5
     
     tfd_score = max(0, min(100, tfd_score))
@@ -186,17 +198,49 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
         paid_on_time = sum(1 for loan in loan_history if loan['status'] in ['Paid On Time', 'Paid Early'])
         total_loans = len(loan_history)
         defaults = sum(1 for loan in loan_history if loan['status'] == 'Defaulted')
+        restructured = sum(1 for loan in loan_history if loan['status'] == 'Restructured')
+        active_loans = sum(1 for loan in loan_history if loan['status'] == 'Active')
         avg_loan = sum(loan['amount'] for loan in loan_history) / len(loan_history)
     else:
         paid_on_time = 0
         total_loans = 0
         defaults = 0
+        restructured = 0
+        active_loans = 0
         avg_loan = 0
     
-    if apex_score >= 75:
+    # If person has defaults or high debt, they should NOT get good recommendations
+    if defaults >= 2 or outstanding_debt > 30000:
+        # Force them into high risk category regardless of score
+        max_loan = 500 if defaults >= 3 else 1000
+        
+        recommendation = {
+            "decision": "REJECT - High Default Risk",
+            "recommended_loan_amount": 0,
+            "max_loan_amount": max_loan,
+            "interest_rate_range": "30-40%",
+            "repayment_period": "1 month maximum",
+            "reasoning": [
+                f"Critical Risk: ApexScore of {apex_score}/100 with {defaults} default(s)",
+                f"Outstanding debt: {currency_symbol}{outstanding_debt:,} across {active_loans} active + {defaults} defaulted loans",
+                f"Poor repayment history: Only {paid_on_time}/{total_loans} loans paid on time",
+                f"BSI indicators: Location ({bsi_location}), Device ({bsi_device}), SIM ({bsi_sim})",
+                f"{restructured} loan(s) required restructuring - payment difficulty pattern detected"
+            ],
+            "conditions": [
+                f"MUST clear at least 50% of outstanding debt ({currency_symbol}{int(outstanding_debt*0.5):,}) before reapplication",
+                "Only micro-loans under {0} considered after debt clearance".format(f"{currency_symbol}{max_loan:,}"),
+                "Strong collateral (2x loan value) mandatory",
+                "Co-signer with verified income required",
+                "Daily repayment with GPS tracking",
+                "Credit counseling completion required",
+                "6-month good payment history on micro-loan before larger amounts"
+            ]
+        }
+    elif apex_score >= 75 and defaults == 0:
         max_loan = int(avg_loan * 1.5) if avg_loan > 0 else 10000
         if outstanding_debt > 0:
-            max_loan = int(max_loan * 0.7)
+            max_loan = int(max_loan * 0.6)
         
         recommendation = {
             "decision": "Approve",
@@ -207,64 +251,64 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
             "reasoning": [
                 f"Excellent ApexScore of {apex_score}/100 indicates low default risk",
                 f"Strong BSI metrics: Location ({bsi_location}), Device ({bsi_device}), SIM ({bsi_sim})",
-                f"Positive repayment history: {paid_on_time}/{total_loans} loans paid on time" if total_loans > 0 else "No negative history detected",
-                f"Current debt level: {currency_symbol}{outstanding_debt:,} is manageable" if outstanding_debt < 20000 else f"Consider existing debt of {currency_symbol}{outstanding_debt:,}"
+                f"Positive repayment history: {paid_on_time}/{total_loans} loans paid on time",
+                f"Current debt level: {currency_symbol}{outstanding_debt:,} across {active_loans} active loans" if outstanding_debt > 0 else "No outstanding debt"
             ],
             "conditions": [
                 "Verify income documentation",
                 "Confirm current employment status",
-                f"Standard collateral may be waived for amounts under {currency_symbol}5,000"
+                f"Collateral may be waived for amounts under {currency_symbol}5,000"
             ]
         }
-    
-    elif apex_score >= 50:
-        max_loan = int(avg_loan * 0.8) if avg_loan > 0 else 5000
+    elif apex_score >= 50 and defaults <= 1:
+        max_loan = int(avg_loan * 0.5) if avg_loan > 0 else 3000
         if outstanding_debt > 10000:
-            max_loan = int(max_loan * 0.5)
+            max_loan = int(max_loan * 0.3)
         
         recommendation = {
-            "decision": "Review Required",
+            "decision": "Review Required - Conditional Approval",
             "recommended_loan_amount": max_loan,
-            "max_loan_amount": int(max_loan * 1.2),
-            "interest_rate_range": "15-20%",
+            "max_loan_amount": int(max_loan * 1.1),
+            "interest_rate_range": "18-25%",
             "repayment_period": "3-6 months",
             "reasoning": [
-                f"Moderate ApexScore of {apex_score}/100 requires careful assessment",
-                f"BSI indicators show mixed stability: Location ({bsi_location}), Device ({bsi_device}), SIM ({bsi_sim})",
-                f"Repayment history: {paid_on_time}/{total_loans} on-time payments" if total_loans > 0 else "Limited credit history",
-                f"Outstanding debt of {currency_symbol}{outstanding_debt:,} requires monitoring" if outstanding_debt > 0 else "No current outstanding debt"
+                f"Moderate ApexScore of {apex_score}/100 requires careful review",
+                f"BSI indicators show mixed signals: Location ({bsi_location}), Device ({bsi_device}), SIM ({bsi_sim})",
+                f"Repayment history: {paid_on_time}/{total_loans} on-time, {defaults} default(s)",
+                f"Outstanding debt: {currency_symbol}{outstanding_debt:,} must be monitored closely"
             ],
             "conditions": [
-                "Mandatory income verification required",
-                "Collateral or guarantor recommended",
-                f"Limit loan to {currency_symbol}{max_loan:,} maximum",
-                "Weekly repayment schedule recommended",
-                "Consider shorter loan term to reduce risk"
+                "MANDATORY: Collateral worth 150% of loan value",
+                "Co-signer with stable income required",
+                f"Strict maximum: {currency_symbol}{max_loan:,}",
+                "Weekly repayment schedule mandatory",
+                "Income verification and bank statements (3 months)",
+                f"If outstanding debt exceeds {currency_symbol}10,000, must clear 30% first"
             ]
         }
-    
     else:
-        max_loan = 2000 if defaults == 0 else 1000
+        max_loan = 500
         
         recommendation = {
-            "decision": "Reject / Micro-loan Only",
-            "recommended_loan_amount": max_loan,
+            "decision": "REJECT - Unacceptable Risk",
+            "recommended_loan_amount": 0,
             "max_loan_amount": max_loan,
-            "interest_rate_range": "25-30%",
-            "repayment_period": "1-3 months",
+            "interest_rate_range": "35-45%",
+            "repayment_period": "1 month only",
             "reasoning": [
-                f"Low ApexScore of {apex_score}/100 indicates high default risk",
-                f"Weak BSI indicators: Location ({bsi_location}), Device ({bsi_device}), SIM ({bsi_sim})",
-                f"Concerning repayment history: {defaults} default(s) detected" if defaults > 0 else f"Poor payment history: only {paid_on_time}/{total_loans} paid on time",
-                f"High outstanding debt: {currency_symbol}{outstanding_debt:,}" if outstanding_debt > 15000 else "Multiple risk factors identified"
+                f"Low ApexScore of {apex_score}/100 indicates very high default risk",
+                f"Weak BSI: Location ({bsi_location}), Device ({bsi_device}), SIM ({bsi_sim})",
+                f"Critical payment history: {defaults} default(s), only {paid_on_time}/{total_loans} paid on time",
+                f"High outstanding debt: {currency_symbol}{outstanding_debt:,}",
+                "Pattern indicates high likelihood of non-repayment"
             ],
             "conditions": [
-                f"Only micro-loans under {currency_symbol}{max_loan:,} considered",
-                "Strong collateral mandatory",
-                "Co-signer/guarantor required",
-                "Daily or weekly repayment only",
-                "GPS-enabled device tracking agreement",
-                "Alternative: Recommend financial counseling first"
+                "Loan application REJECTED",
+                f"Must resolve all {defaults} defaulted loans before reapplication",
+                f"Clear outstanding debt below {currency_symbol}5,000",
+                "After clearance, only micro-loans (max {0}) with 200% collateral".format(f"{currency_symbol}{max_loan}"),
+                "Credit counseling mandatory",
+                "6-month cooling period with no new defaults required"
             ]
         }
     
@@ -317,7 +361,16 @@ def generate_applicant(email=None):
     loan_history = generate_loan_history(num_loans, c["banks"], c["currency"], c["symbol"])
     
     has_defaults = any(loan['status'] == 'Defaulted' for loan in loan_history)
-    outstanding_debt = random.randint(0, 50000)
+    
+    # Calculate outstanding debt from active and defaulted loans
+    outstanding_debt = 0
+    for loan in loan_history:
+        if loan['status'] == 'Active':
+            outstanding_debt += loan['amount']
+        elif loan['status'] == 'Defaulted':
+            outstanding_debt += loan['amount']
+        elif loan['status'] == 'Restructured':
+            outstanding_debt += int(loan['amount'] * 0.6)  # 60% of original
     
     bsi_location, bsi_device, bsi_sim = calculate_bsi_scores(loan_history, has_defaults)
     
@@ -387,73 +440,4 @@ def generate_applicant(email=None):
             "currency": c["currency"],
             "currency_symbol": c["symbol"],
             "outstanding_debt": outstanding_debt,
-            "loan_history": loan_history
-        },
-        "bsi": {
-            "location_consistency": bsi_location,
-            "device_stability": bsi_device,
-            "sim_changes": bsi_sim,
-            "ip_region_match": 90 if ip_matches_location else random.randint(30, 60),
-            "travel_frequency": random.randint(40, 95)
-        },
-        "apex_score": apex_score,
-        "risk_level": "Low" if apex_score >= 75 else "Medium" if apex_score >= 50 else "High",
-        "action_recommendation": generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_location, bsi_device, bsi_sim, c["symbol"]),
-        "created_at": datetime.datetime.utcnow().isoformat()
-    }
-
-    DATABASE[applicant["id"]] = applicant
-    return applicant
-
-for _ in range(150):
-    generate_applicant()
-
-@app.get("/")
-def root():
-    return {"status": "ApexScore API running", "version": "2.0"}
-
-@app.get("/api/applicants")
-def list_applicants(limit: int = 50):
-    return {"applicants": list(DATABASE.values())[:limit]}
-
-@app.get("/api/search")
-def search(email: str = Query(...)):
-    if not is_valid_email(email):
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Invalid email format or domain. Only {', '.join(VALID_EMAIL_DOMAINS)} are accepted."
-        )
-    
-    for applicant in DATABASE.values():
-        if applicant["email"].lower() == email.lower():
-            return applicant
-    
-    new_applicant = generate_applicant(email)
-    return new_applicant
-
-@app.get("/api/applicant/{id}")
-def get_applicant(id: str):
-    applicant = DATABASE.get(id)
-    if not applicant:
-        raise HTTPException(status_code=404, detail="Applicant not found")
-    return applicant
-
-@app.get("/api/stats")
-def stats():
-    total = len(DATABASE)
-    high = len([a for a in DATABASE.values() if a["risk_level"] == "High"])
-    medium = len([a for a in DATABASE.values() if a["risk_level"] == "Medium"])
-    low = len([a for a in DATABASE.values() if a["risk_level"] == "Low"])
-    avg_score = sum(a["apex_score"] for a in DATABASE.values()) / total if total > 0 else 0
-    
-    return {
-        "total_applicants": total,
-        "active_defaults": high,
-        "high_risk_percentage": f"{int((high/total)*100)}%" if total > 0 else "0%",
-        "risk_distribution": {
-            "high": high,
-            "medium": medium,
-            "low": low
-        },
-        "average_apex_score": round(avg_score, 1)
-    }
+  
