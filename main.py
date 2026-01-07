@@ -14,37 +14,15 @@ app.add_middleware(
 )
 
 COUNTRIES = {
-    "Nigeria": {
-        "code": "+234", "currency": "NGN", "symbol": "₦",
-        "banks": ["GTBank", "Access Bank", "First Bank", "Sterling Bank", "UBA", "Opay", "Moniepoint MFB", "PalmPay", "Kuda", "FairMoney"],
-        "isps": ["MTN", "Airtel", "Glo", "9mobile"],
-        "cities": ["Lagos", "Ibadan", "Abeokuta", "Benin City", "Onitsha"],
-        "android_models": ["Tecno Spark", "Infinix Hot", "Samsung A14", "Xiaomi Redmi"],
-        "ios_models": ["iPhone 11", "iPhone 12", "iPhone SE"]
-    },
-    "USA": {
-        "code": "+1", "currency": "USD", "symbol": "$",
-        "banks": ["Chase", "Bank of America", "Wells Fargo", "Capital One"],
-        "isps": ["Verizon", "AT&T", "T-Mobile"],
-        "cities": ["New York", "Houston", "Chicago", "Dallas", "Los Angeles"],
-        "android_models": ["Samsung Galaxy S21", "Google Pixel", "OnePlus"],
-        "ios_models": ["iPhone 13", "iPhone 14", "iPhone 12"]
-    },
-    "UK": {
-        "code": "+44", "currency": "GBP", "symbol": "£",
-        "banks": ["Barclays", "HSBC", "NatWest", "Monzo", "Revolut"],
-        "isps": ["Vodafone", "O2", "EE"],
-        "cities": ["London", "Manchester", "Birmingham", "Leeds", "Glasgow"],
-        "android_models": ["Samsung Galaxy", "Google Pixel", "Xiaomi"],
-        "ios_models": ["iPhone 13", "iPhone 14", "iPhone 12"]
-    },
+    "Nigeria": {"code": "+234", "currency": "NGN", "symbol": "₦", "banks": ["GTBank", "Access Bank", "First Bank", "Sterling Bank", "UBA", "Opay", "Moniepoint MFB", "PalmPay", "Kuda", "FairMoney"], "isps": ["MTN", "Airtel", "Glo", "9mobile"], "cities": ["Lagos", "Ibadan", "Abeokuta", "Benin City", "Onitsha"], "android_models": ["Tecno Spark", "Infinix Hot", "Samsung A14", "Xiaomi Redmi"], "ios_models": ["iPhone 11", "iPhone 12", "iPhone SE"]},
+    "USA": {"code": "+1", "currency": "USD", "symbol": "$", "banks": ["Chase", "Bank of America", "Wells Fargo", "Capital One"], "isps": ["Verizon", "AT&T", "T-Mobile"], "cities": ["New York", "Houston", "Chicago", "Dallas", "Los Angeles"], "android_models": ["Samsung Galaxy S21", "Google Pixel", "OnePlus"], "ios_models": ["iPhone 13", "iPhone 14", "iPhone 12"]},
+    "UK": {"code": "+44", "currency": "GBP", "symbol": "£", "banks": ["Barclays", "HSBC", "NatWest", "Monzo", "Revolut"], "isps": ["Vodafone", "O2", "EE"], "cities": ["London", "Manchester", "Birmingham", "Leeds", "Glasgow"], "android_models": ["Samsung Galaxy", "Google Pixel", "Xiaomi"], "ios_models": ["iPhone 13", "iPhone 14", "iPhone 12"]},
 }
 
 FIRST_NAMES = ["Michael", "David", "Blessing", "Fatima", "Esther", "Joseph", "Daniel", "Grace", "Amara", "Chen", "Raj", "Maria"]
 LAST_NAMES = ["Anderson", "Brown", "Okoye", "Hassan", "Adeyemi", "Johnson", "Silva", "Kumar", "Wang", "Garcia"]
 MIDDLE_NAMES = ["James", "Oluwaseun", "Ibrahim", "Paul", "Grace", "Abdul", "Marie", "Anne", "Luis", "Wei"]
 JOBS = ["Trader", "Farmer", "POS Agent", "Ride-hailing Driver", "Market Vendor", "Tailor", "Electrician", "Teacher", "Nurse", "Shop Owner"]
-
 LOAN_PURPOSES = ["Business Expansion", "Education", "Medical Emergency", "Rent Payment", "Inventory Purchase", "Equipment", "Working Capital", "Personal Use"]
 REPAYMENT_STATUS = ["Paid On Time", "Paid Early", "Paid Late", "Defaulted", "Restructured", "Active"]
 VALID_EMAIL_DOMAINS = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "icloud.com"]
@@ -62,27 +40,18 @@ def generate_email(fn, ln):
     return f"{fn.lower()}{ln.lower()}{random.randint(1, 999)}@{random.choice(VALID_EMAIL_DOMAINS)}"
 
 def calculate_bsi_scores(loan_history, has_defaults, sim_verified, ip_matches):
-    # BSI scores should reflect actual status
-    # Higher score = lower risk = more stable
-    
-    # Location: based on defaults
     location_consistency = random.randint(70, 95) if not has_defaults else random.randint(40, 65)
-    
-    # Device: based on defaults
     device_stability = random.randint(70, 95) if not has_defaults else random.randint(40, 65)
-    
-    # SIM: If VERIFIED, should be high (75-95), if UNVERIFIED should be low (20-45)
     if sim_verified:
         sim_changes = random.randint(75, 95)
     else:
         sim_changes = random.randint(20, 45)
-    
     return location_consistency, device_stability, sim_changes
 
 def calculate_apex_score(bsi_location, bsi_device, bsi_sim, outstanding_debt, loan_history):
     bsi_average = (bsi_location + bsi_device + bsi_sim) / 3
     bsi_component = bsi_average * 0.6
-    tfd_score = 60  # Start higher to balance with BSI
+    tfd_score = 60
     
     if loan_history:
         total_loans = len(loan_history)
@@ -92,28 +61,22 @@ def calculate_apex_score(bsi_location, bsi_device, bsi_sim, outstanding_debt, lo
         active_loans = sum(1 for loan in loan_history if loan['status'] == 'Active')
         restructured = sum(1 for loan in loan_history if loan['status'] == 'Restructured')
         
-        # Calculate completion rate (not just paid on time)
         completed_loans = paid_on_time + paid_late
         if total_loans > 0:
             completion_rate = completed_loans / total_loans
-            # Give credit for completing loans, even if late
-            tfd_score = 40 + (completion_rate * 40)  # Range: 40-80 based on completion
+            tfd_score = 40 + (completion_rate * 40)
         
-        # Moderate penalties that don't overshadow BSI
         if defaults > 0:
-            tfd_score -= (defaults * 8)  # Reduced further
+            tfd_score -= (defaults * 8)
         if restructured > 0:
             tfd_score -= (restructured * 4)
         if active_loans > 3:
             tfd_score -= 5
-        
-        # Reward on-time payments but don't make it dominant
         if paid_on_time > 0:
-            on_time_bonus = min(10, paid_on_time * 2)  # Max 10 bonus points
+            on_time_bonus = min(10, paid_on_time * 2)
             tfd_score += on_time_bonus
     
-    # Balanced debt penalties
-    debt_ratio = outstanding_debt / 50000  # Normalize to 50k
+    debt_ratio = outstanding_debt / 50000
     if debt_ratio > 1.5:
         tfd_score -= 12
     elif debt_ratio > 1.0:
@@ -134,8 +97,6 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
         defaults = sum(1 for loan in loan_history if loan['status'] == 'Defaulted')
         restructured = sum(1 for loan in loan_history if loan['status'] == 'Restructured')
         active_loans = sum(1 for loan in loan_history if loan['status'] == 'Active')
-        
-        # Calculate total amount ever borrowed and total successfully repaid
         total_borrowed = sum(loan['amount'] for loan in loan_history)
         total_paid = sum(loan.get('repayment_amount', 0) for loan in loan_history if loan.get('repayment_amount'))
         avg_loan = total_borrowed / len(loan_history)
@@ -150,18 +111,14 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
         total_paid = 0
         avg_loan = 0
     
-    # Base recommendation: 40-50% of total successfully paid, or 30-40% of average if no payment history
     if total_paid > 0:
         base_recommendation = int(total_paid * 0.45)
     else:
         base_recommendation = int(avg_loan * 0.35)
     
-    # Decision logic based on score and history
     if apex_score >= 70 and defaults == 0:
-        # Good borrower
         recommended = base_recommendation
         max_loan = int(base_recommendation * 1.4)
-        
         return {
             "decision": "Approve",
             "recommended_loan_amount": recommended,
@@ -170,7 +127,7 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
             "repayment_period": "6-12 months",
             "reasoning": [
                 f"Good ApexScore of {apex_score}/100 shows reliable payment behavior",
-                f"Strong payment record: {paid_on_time}/{total_loans} loans paid on time" + (f", {paid_late} paid late" if paid_late > 0 else ""),
+                f"Strong payment record: {paid_on_time}/{total_loans} loans paid on time",
                 f"Total successfully repaid: {currency_symbol}{int(total_paid):,}",
                 f"Good BSI profile: Location ({bsi_location}), Device ({bsi_device}), SIM ({bsi_sim})",
                 f"Current outstanding: {currency_symbol}{outstanding_debt:,}"
@@ -181,12 +138,9 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
                 f"Light collateral for amounts over {currency_symbol}{int(max_loan*0.6):,}"
             ]
         }
-    
     elif apex_score >= 55 and defaults <= 1:
-        # Moderate risk
         recommended = int(base_recommendation * 0.7)
         max_loan = int(base_recommendation * 1.0)
-        
         return {
             "decision": "Approve with Conditions",
             "recommended_loan_amount": recommended,
@@ -195,7 +149,7 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
             "repayment_period": "4-8 months",
             "reasoning": [
                 f"Moderate ApexScore of {apex_score}/100 shows acceptable risk",
-                f"Payment history: {paid_on_time}/{total_loans} on time" + (f", {defaults} default" if defaults > 0 else "") + (f", {restructured} restructured" if restructured > 0 else ""),
+                f"Payment history: {paid_on_time}/{total_loans} on time, {defaults} defaults, {restructured} restructured",
                 f"Successfully repaid: {currency_symbol}{int(total_paid):,}",
                 f"BSI assessment: Location ({bsi_location}), Device ({bsi_device}), SIM ({bsi_sim})",
                 f"Outstanding balance: {currency_symbol}{outstanding_debt:,}"
@@ -207,12 +161,9 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
                 "Co-signer recommended for maximum amount"
             ]
         }
-    
     elif apex_score >= 40 and defaults <= 2:
-        # Higher risk but still lendable
         recommended = int(base_recommendation * 0.4)
         max_loan = int(base_recommendation * 0.6)
-        
         return {
             "decision": "Conditional Approval - High Interest",
             "recommended_loan_amount": recommended,
@@ -234,13 +185,13 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
                 "Address outstanding defaults before full approval"
             ]
         }
-    
     else:
-        # Very high risk
         recommended = 0
-        max_loan = int(base_recommendation * 0.15) if base_recommendation > 0 else 1000
-        max_loan = max(500, min(max_loan, 3000))  # Between 500-3000
-        
+        if base_recommendation > 0:
+            max_loan = int(base_recommendation * 0.15)
+        else:
+            max_loan = 1000
+        max_loan = max(500, min(max_loan, 3000))
         return {
             "decision": "High Risk - Micro-loan Only",
             "recommended_loan_amount": recommended,
@@ -313,27 +264,17 @@ def generate_applicant(email=None):
     loan_history = generate_loan_history(num_loans, c["banks"], c["currency"], c["symbol"])
     has_defaults = any(loan['status'] == 'Defaulted' for loan in loan_history)
     
-    # Calculate outstanding debt ONLY from active and defaulted loans
     outstanding_debt = 0
     for loan in loan_history:
         if loan['status'] == 'Active':
             outstanding_debt += loan['amount']
         elif loan['status'] == 'Defaulted':
-            # Only add if it's actually still unpaid
             outstanding_debt += loan['amount']
     
-    # Determine SIM verification status first
-    sim_verified = random.choice([True, True, True, False])  # 75% verified
-    
-    # Determine IP match
-    ip_matches_location = random.random() > 0.25  # 75% match rate
-    
-    # Calculate BSI scores based on actual status
+    sim_verified = random.choice([True, True, True, False])
+    ip_matches_location = random.random() > 0.25
     bsi_location, bsi_device, bsi_sim = calculate_bsi_scores(loan_history, has_defaults, sim_verified, ip_matches_location)
-    
-    # IP region match should be high if IP matches, low if not
     ip_region_match = random.randint(85, 95) if ip_matches_location else random.randint(25, 45)
-    
     apex_score = calculate_apex_score(bsi_location, bsi_device, bsi_sim, outstanding_debt, loan_history)
     
     device_type = random.choice(["Android", "iOS"])
@@ -348,12 +289,9 @@ def generate_applicant(email=None):
     last_email_login = (datetime.datetime.utcnow() - timedelta(hours=random.randint(1, 48))).isoformat()
     last_sim_activity = (datetime.datetime.utcnow() - timedelta(hours=random.randint(1, 72))).isoformat()
     
-    # Get unique banks from loan history
     banks_used = list(set(loan['institution'] for loan in loan_history))
-    
-    # Create bank accounts matching loan history banks
     bank_accounts = []
-    for bank in banks_used[:3]:  # Max 3 accounts
+    for bank in banks_used[:3]:
         bank_accounts.append({
             "bank_name": bank,
             "account_number": str(random.randint(1000000000, 9999999999)),
@@ -440,4 +378,20 @@ def search(email: str = Query(...)):
 def get_applicant(id: str):
     applicant = DATABASE.get(id)
     if not applicant:
-        raise HTTPException(status_code=404, 
+        raise HTTPException(status_code=404, detail="Applicant not found")
+    return applicant
+
+@app.get("/api/stats")
+def stats():
+    total = len(DATABASE)
+    high = len([a for a in DATABASE.values() if a["risk_level"] == "High"])
+    medium = len([a for a in DATABASE.values() if a["risk_level"] == "Medium"])
+    low = len([a for a in DATABASE.values() if a["risk_level"] == "Low"])
+    avg_score = sum(a["apex_score"] for a in DATABASE.values()) / total if total > 0 else 0
+    return {
+        "total_applicants": total,
+        "active_defaults": high,
+        "high_risk_percentage": f"{int((high/total)*100)}%" if total > 0 else "0%",
+        "risk_distribution": {"high": high, "medium": medium, "low": low},
+        "average_apex_score": round(avg_score, 1)
+        }
