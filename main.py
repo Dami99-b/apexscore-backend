@@ -133,7 +133,6 @@ DATABASE = {}
 # -------------------- HELPERS --------------------
 
 def is_valid_email(email):
-    """Validate email format and domain"""
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     if not re.match(pattern, email):
         return False
@@ -144,28 +143,17 @@ def generate_email(fn, ln):
     return f"{fn.lower()}{ln.lower()}{random.randint(1, 999)}@{random.choice(VALID_EMAIL_DOMAINS)}"
 
 def calculate_bsi_scores(loan_history, has_defaults):
-    """Calculate BSI scores based on risk factors"""
-    # Location consistency: higher if stable, lower if risky
     location_consistency = random.randint(70, 95) if not has_defaults else random.randint(30, 60)
-    
-    # Device stability: higher if stable, lower if risky
     device_stability = random.randint(65, 95) if not has_defaults else random.randint(30, 65)
-    
-    # SIM changes: higher score = more stable (fewer changes)
     sim_changes = random.randint(60, 95) if not has_defaults else random.randint(10, 50)
-    
     return location_consistency, device_stability, sim_changes
 
 def calculate_apex_score(bsi_location, bsi_device, bsi_sim, outstanding_debt, loan_history):
-    """Calculate ApexScore based on PRD formula: BSI + TFD weighted"""
-    # BSI component (60% weight): average of the three BSI scores
     bsi_average = (bsi_location + bsi_device + bsi_sim) / 3
     bsi_component = bsi_average * 0.6
     
-    # TFD component (40% weight)
-    tfd_score = 50  # Base score
+    tfd_score = 50
     
-    # Analyze loan history
     if loan_history:
         paid_on_time = sum(1 for loan in loan_history if loan['status'] in ['Paid On Time', 'Paid Early'])
         total_completed = sum(1 for loan in loan_history if loan['status'] in ['Paid On Time', 'Paid Early', 'Paid Late'])
@@ -176,15 +164,12 @@ def calculate_apex_score(bsi_location, bsi_device, bsi_sim, outstanding_debt, lo
             repayment_rate = paid_on_time / total_completed
             tfd_score = repayment_rate * 100
         
-        # Penalize for defaults
         if defaults > 0:
             tfd_score -= (defaults * 15)
         
-        # Slight penalty for too many active loans
         if active_loans > 2:
             tfd_score -= 5
     
-    # Debt penalty
     if outstanding_debt > 30000:
         tfd_score -= 10
     elif outstanding_debt > 15000:
@@ -193,34 +178,25 @@ def calculate_apex_score(bsi_location, bsi_device, bsi_sim, outstanding_debt, lo
     tfd_score = max(0, min(100, tfd_score))
     tfd_component = tfd_score * 0.4
     
-    # Final ApexScore
     apex_score = int(bsi_component + tfd_component)
     return max(30, min(95, apex_score))
 
 def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_location, bsi_device, bsi_sim, currency_symbol):
-    """Generate AI lending recommendation based on comprehensive analysis"""
-    # Calculate repayment history quality
     if loan_history:
         paid_on_time = sum(1 for loan in loan_history if loan['status'] in ['Paid On Time', 'Paid Early'])
         total_loans = len(loan_history)
         defaults = sum(1 for loan in loan_history if loan['status'] == 'Defaulted')
-        active_loans = sum(1 for loan in loan_history if loan['status'] == 'Active')
-        
-        # Calculate average loan amount from history
-        avg_loan = sum(loan['amount'] for loan in loan_history) / len(loan_history) if loan_history else 0
+        avg_loan = sum(loan['amount'] for loan in loan_history) / len(loan_history)
     else:
         paid_on_time = 0
         total_loans = 0
         defaults = 0
-        active_loans = 0
         avg_loan = 0
     
-    # Base recommendation on ApexScore
     if apex_score >= 75:
-        # Low Risk
         max_loan = int(avg_loan * 1.5) if avg_loan > 0 else 10000
         if outstanding_debt > 0:
-            max_loan = int(max_loan * 0.7)  # Reduce if existing debt
+            max_loan = int(max_loan * 0.7)
         
         recommendation = {
             "decision": "Approve",
@@ -240,10 +216,8 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
                 f"Standard collateral may be waived for amounts under {currency_symbol}5,000"
             ]
         }
-        }
     
     elif apex_score >= 50:
-        # Medium Risk
         max_loan = int(avg_loan * 0.8) if avg_loan > 0 else 5000
         if outstanding_debt > 10000:
             max_loan = int(max_loan * 0.5)
@@ -268,10 +242,8 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
                 "Consider shorter loan term to reduce risk"
             ]
         }
-        }
     
     else:
-        # High Risk
         max_loan = 2000 if defaults == 0 else 1000
         
         recommendation = {
@@ -287,7 +259,7 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
                 f"High outstanding debt: {currency_symbol}{outstanding_debt:,}" if outstanding_debt > 15000 else "Multiple risk factors identified"
             ],
             "conditions": [
-                "Only micro-loans under " + f"{currency_symbol}{max_loan:,} considered",
+                f"Only micro-loans under {currency_symbol}{max_loan:,} considered",
                 "Strong collateral mandatory",
                 "Co-signer/guarantor required",
                 "Daily or weekly repayment only",
@@ -299,7 +271,6 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
     return recommendation
 
 def generate_loan_history(num_loans, country_banks, currency_code, currency_symbol):
-    """Generate realistic loan history"""
     history = []
     base_date = datetime.datetime.utcnow() - timedelta(days=random.randint(365, 1825))
     
@@ -339,24 +310,19 @@ def generate_applicant(email=None):
     ln = random.choice(LAST_NAMES)
     mid = random.choice(MIDDLE_NAMES)
 
-    # Use provided email or generate new one
     if email is None:
         email = generate_email(fn, ln)
     
     num_loans = random.randint(5, 10)
     loan_history = generate_loan_history(num_loans, c["banks"], c["currency"], c["symbol"])
     
-    # Check if there are defaults in history
     has_defaults = any(loan['status'] == 'Defaulted' for loan in loan_history)
     outstanding_debt = random.randint(0, 50000)
     
-    # Calculate BSI scores based on risk profile
     bsi_location, bsi_device, bsi_sim = calculate_bsi_scores(loan_history, has_defaults)
     
-    # Calculate ApexScore properly
     apex_score = calculate_apex_score(bsi_location, bsi_device, bsi_sim, outstanding_debt, loan_history)
     
-    # Choose device type first, then match OS and model
     device_type = random.choice(["Android", "iOS"])
     if device_type == "Android":
         model = random.choice(c["android_models"])
@@ -365,11 +331,9 @@ def generate_applicant(email=None):
         model = random.choice(c["ios_models"])
         os_version = random.choice(["iOS 16", "iOS 15", "iOS 17"])
     
-    # Generate realistic IP that may or may not match location
     city_name = random.choice(c["cities"])
-    ip_matches_location = random.random() > 0.3  # 70% match rate
+    ip_matches_location = random.random() > 0.3
     
-    # Generate last login times
     last_email_login = (datetime.datetime.utcnow() - timedelta(hours=random.randint(1, 48))).isoformat()
     last_sim_activity = (datetime.datetime.utcnow() - timedelta(hours=random.randint(1, 72))).isoformat()
 
@@ -441,11 +405,8 @@ def generate_applicant(email=None):
     DATABASE[applicant["id"]] = applicant
     return applicant
 
-# preload
 for _ in range(150):
     generate_applicant()
-
-# -------------------- ROUTES --------------------
 
 @app.get("/")
 def root():
@@ -457,8 +418,42 @@ def list_applicants(limit: int = 50):
 
 @app.get("/api/search")
 def search(email: str = Query(...)):
-    # Validate email format and domain
     if not is_valid_email(email):
         raise HTTPException(
             status_code=400, 
-            detail=f"Invalid email form
+            detail=f"Invalid email format or domain. Only {', '.join(VALID_EMAIL_DOMAINS)} are accepted."
+        )
+    
+    for applicant in DATABASE.values():
+        if applicant["email"].lower() == email.lower():
+            return applicant
+    
+    new_applicant = generate_applicant(email)
+    return new_applicant
+
+@app.get("/api/applicant/{id}")
+def get_applicant(id: str):
+    applicant = DATABASE.get(id)
+    if not applicant:
+        raise HTTPException(status_code=404, detail="Applicant not found")
+    return applicant
+
+@app.get("/api/stats")
+def stats():
+    total = len(DATABASE)
+    high = len([a for a in DATABASE.values() if a["risk_level"] == "High"])
+    medium = len([a for a in DATABASE.values() if a["risk_level"] == "Medium"])
+    low = len([a for a in DATABASE.values() if a["risk_level"] == "Low"])
+    avg_score = sum(a["apex_score"] for a in DATABASE.values()) / total if total > 0 else 0
+    
+    return {
+        "total_applicants": total,
+        "active_defaults": high,
+        "high_risk_percentage": f"{int((high/total)*100)}%" if total > 0 else "0%",
+        "risk_distribution": {
+            "high": high,
+            "medium": medium,
+            "low": low
+        },
+        "average_apex_score": round(avg_score, 1)
+    }
