@@ -27,6 +27,11 @@ LOAN_PURPOSES = ["Business Expansion", "Education", "Medical Emergency", "Rent P
 REPAYMENT_STATUS = ["Paid On Time", "Paid Early", "Paid Late", "Defaulted", "Restructured", "Active"]
 VALID_EMAIL_DOMAINS = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "icloud.com"]
 
+# Credit bureaus and financial data sources
+CREDIT_BUREAUS = ["Experian", "Equifax", "TransUnion", "FICO", "Credit Registry", "Central Credit Bureau"]
+INCOME_SOURCES = ["Employer Payroll", "Bank Statement Analysis", "Tax Records", "Self-Reported", "Business Revenue"]
+EXPENDITURE_CATEGORIES = ["Housing", "Transportation", "Food & Groceries", "Utilities", "Healthcare", "Entertainment", "Debt Repayment", "Savings", "Other"]
+
 DATABASE = {}
 
 def is_valid_email(email):
@@ -298,6 +303,34 @@ def generate_applicant(email=None):
             "account_type": random.choice(["Savings", "Current"]),
             "status": random.choice(["Active", "Active", "Active", "Dormant"])
         })
+    
+    # Generate income data
+    monthly_income = random.randint(1000, 15000)
+    income_source = random.choice(INCOME_SOURCES)
+    income_verification_date = (datetime.datetime.utcnow() - timedelta(days=random.randint(1, 90))).isoformat()
+    
+    # Generate expenditure breakdown
+    total_expenditure = int(monthly_income * random.uniform(0.5, 0.95))
+    expenditure_breakdown = {
+        "Housing": int(total_expenditure * random.uniform(0.25, 0.35)),
+        "Transportation": int(total_expenditure * random.uniform(0.10, 0.15)),
+        "Food & Groceries": int(total_expenditure * random.uniform(0.15, 0.20)),
+        "Utilities": int(total_expenditure * random.uniform(0.05, 0.10)),
+        "Healthcare": int(total_expenditure * random.uniform(0.05, 0.10)),
+        "Entertainment": int(total_expenditure * random.uniform(0.05, 0.08)),
+        "Debt Repayment": int(outstanding_debt * 0.02) if outstanding_debt > 0 else 0,
+        "Savings": max(0, monthly_income - total_expenditure),
+        "Other": int(total_expenditure * random.uniform(0.03, 0.07))
+    }
+    
+    # Generate credit report from bureau
+    credit_bureau = random.choice(CREDIT_BUREAUS)
+    credit_report_date = (datetime.datetime.utcnow() - timedelta(days=random.randint(1, 30))).isoformat()
+    credit_score = random.randint(300, 850)
+    
+    # Calculate debt-to-income ratio
+    monthly_debt_payment = expenditure_breakdown["Debt Repayment"]
+    dti_ratio = round((monthly_debt_payment / monthly_income) * 100, 2) if monthly_income > 0 else 0
 
     applicant = {
         "id": str(uuid.uuid4()),
@@ -332,6 +365,29 @@ def generate_applicant(email=None):
             "vpn_detected": random.choice([False, False, True]),
         },
         "bank_accounts": bank_accounts,
+        "financial_profile": {
+            "monthly_income": monthly_income,
+            "income_source": income_source,
+            "income_verification_date": income_verification_date,
+            "monthly_expenditure": total_expenditure,
+            "expenditure_breakdown": expenditure_breakdown,
+            "disposable_income": monthly_income - total_expenditure,
+            "debt_to_income_ratio": dti_ratio,
+            "currency": c["currency"],
+            "currency_symbol": c["symbol"]
+        },
+        "credit_report": {
+            "bureau": credit_bureau,
+            "report_date": credit_report_date,
+            "credit_score": credit_score,
+            "credit_rating": "Excellent" if credit_score >= 750 else "Good" if credit_score >= 650 else "Fair" if credit_score >= 550 else "Poor",
+            "total_credit_accounts": len(bank_accounts) + len(loan_history),
+            "active_credit_lines": len([l for l in loan_history if l['status'] == 'Active']),
+            "derogatory_marks": len([l for l in loan_history if l['status'] == 'Defaulted']),
+            "credit_utilization": round((outstanding_debt / (monthly_income * 12)) * 100, 2) if monthly_income > 0 else 0,
+            "oldest_account_age_months": random.randint(12, 120),
+            "recent_inquiries": random.randint(0, 5)
+        },
         "tfd": {
             "currency": c["currency"],
             "currency_symbol": c["symbol"],
@@ -340,58 +396,4 @@ def generate_applicant(email=None):
         },
         "bsi": {
             "location_consistency": bsi_location,
-            "device_stability": bsi_device,
-            "sim_changes": bsi_sim,
-            "ip_region_match": ip_region_match,
-            "travel_frequency": random.randint(60, 95) if not has_defaults else random.randint(40, 70)
-        },
-        "apex_score": apex_score,
-        "risk_level": "Low" if apex_score >= 75 else "Medium" if apex_score >= 50 else "High",
-        "action_recommendation": generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_location, bsi_device, bsi_sim, c["symbol"]),
-        "created_at": datetime.datetime.utcnow().isoformat()
-    }
-
-    DATABASE[applicant["id"]] = applicant
-    return applicant
-
-for _ in range(150):
-    generate_applicant()
-
-@app.get("/")
-def root():
-    return {"status": "ApexScore API running", "version": "2.0"}
-
-@app.get("/api/applicants")
-def list_applicants(limit: int = 50):
-    return {"applicants": list(DATABASE.values())[:limit]}
-
-@app.get("/api/search")
-def search(email: str = Query(...)):
-    if not is_valid_email(email):
-        raise HTTPException(status_code=400, detail=f"Invalid email format or domain. Only {', '.join(VALID_EMAIL_DOMAINS)} are accepted.")
-    for applicant in DATABASE.values():
-        if applicant["email"].lower() == email.lower():
-            return applicant
-    return generate_applicant(email)
-
-@app.get("/api/applicant/{id}")
-def get_applicant(id: str):
-    applicant = DATABASE.get(id)
-    if not applicant:
-        raise HTTPException(status_code=404, detail="Applicant not found")
-    return applicant
-
-@app.get("/api/stats")
-def stats():
-    total = len(DATABASE)
-    high = len([a for a in DATABASE.values() if a["risk_level"] == "High"])
-    medium = len([a for a in DATABASE.values() if a["risk_level"] == "Medium"])
-    low = len([a for a in DATABASE.values() if a["risk_level"] == "Low"])
-    avg_score = sum(a["apex_score"] for a in DATABASE.values()) / total if total > 0 else 0
-    return {
-        "total_applicants": total,
-        "active_defaults": high,
-        "high_risk_percentage": f"{int((high/total)*100)}%" if total > 0 else "0%",
-        "risk_distribution": {"high": high, "medium": medium, "low": low},
-        "average_apex_score": round(avg_score, 1)
-        }
+            "de
