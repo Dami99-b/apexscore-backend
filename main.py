@@ -33,7 +33,6 @@ INCOME_SOURCES = ["Employer Payroll", "Bank Statement Analysis", "Tax Records", 
 EXPENDITURE_CATEGORIES = ["Housing", "Transportation", "Food & Groceries", "Utilities", "Healthcare", "Entertainment", "Debt Repayment", "Savings", "Other"]
 
 DATABASE = {}
-
 def is_valid_email(email):
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     if not re.match(pattern, email):
@@ -217,8 +216,7 @@ def generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_l
                 "Guarantor with verified income required",
                 "Short-term repayment (weekly/bi-weekly)"
             ]
-        }
-
+    }
 def generate_loan_history(num_loans, country_banks, currency_code, currency_symbol):
     history = []
     base_date = datetime.datetime.utcnow() - timedelta(days=random.randint(365, 1825))
@@ -396,4 +394,109 @@ def generate_applicant(email=None):
         },
         "bsi": {
             "location_consistency": bsi_location,
-            "de
+            "device_stability": bsi_device,
+            "sim_changes": bsi_sim,
+            "ip_region_match": ip_region_match,
+            "travel_frequency": random.randint(60, 95) if not has_defaults else random.randint(40, 70)
+        },
+        "apex_score": apex_score,
+        "risk_level": "Low" if apex_score >= 75 else "Medium" if apex_score >= 50 else "High",
+        "action_recommendation": generate_ai_recommendation(apex_score, outstanding_debt, loan_history, bsi_location, bsi_device, bsi_sim, c["symbol"]),
+        "created_at": datetime.datetime.utcnow().isoformat()
+    }
+
+    DATABASE[applicant["id"]] = applicant
+    return applicant
+
+for _ in range(150):
+    generate_applicant()
+
+@app.get("/")
+def root():
+    return {"status": "ApexScore API running", "version": "2.0"}
+
+@app.get("/api/applicants")
+def list_applicants(limit: int = 50):
+    return {"applicants": list(DATABASE.values())[:limit]}
+
+@app.get("/api/search")
+def search(email: str = Query(...)):
+    if not is_valid_email(email):
+        raise HTTPException(status_code=400, detail=f"Invalid email format or domain. Only {', '.join(VALID_EMAIL_DOMAINS)} are accepted.")
+    for applicant in DATABASE.values():
+        if applicant["email"].lower() == email.lower():
+            return applicant
+    return generate_applicant(email)
+
+@app.get("/api/applicant/{id}")
+def get_applicant(id: str):
+    applicant = DATABASE.get(id)
+    if not applicant:
+        raise HTTPException(status_code=404, detail="Applicant not found")
+    return applicant
+
+@app.get("/api/stats")
+def stats():
+    total = len(DATABASE)
+    high = len([a for a in DATABASE.values() if a["risk_level"] == "High"])
+    medium = len([a for a in DATABASE.values() if a["risk_level"] == "Medium"])
+    low = len([a for a in DATABASE.values() if a["risk_level"] == "Low"])
+    avg_score = sum(a["apex_score"] for a in DATABASE.values()) / total if total > 0 else 0
+    return {
+        "total_applicants": total,
+        "active_defaults": high,
+        "high_risk_percentage": f"{int((high/total)*100)}%" if total > 0 else "0%",
+        "risk_distribution": {"high": high, "medium": medium, "low": low},
+        "average_apex_score": round(avg_score, 1)
+    }
+
+@app.get("/api/applicant/{id}/financial-profile")
+def get_financial_profile(id: str):
+    applicant = DATABASE.get(id)
+    if not applicant:
+        raise HTTPException(status_code=404, detail="Applicant not found")
+    return {
+        "applicant_id": id,
+        "name": applicant["name"]["full"],
+        "financial_profile": applicant.get("financial_profile"),
+        "retrieved_at": datetime.datetime.utcnow().isoformat()
+    }
+
+@app.get("/api/applicant/{id}/credit-report")
+def get_credit_report(id: str):
+    applicant = DATABASE.get(id)
+    if not applicant:
+        raise HTTPException(status_code=404, detail="Applicant not found")
+    return {
+        "applicant_id": id,
+        "name": applicant["name"]["full"],
+        "credit_report": applicant.get("credit_report"),
+        "financial_profile": applicant.get("financial_profile"),
+        "outstanding_debt": applicant["tfd"]["outstanding_debt"],
+        "retrieved_at": datetime.datetime.utcnow().isoformat()
+        }
+
+@app.get("/api/applicant/{id}/full-report")
+def get_full_report(id: str):
+    applicant = DATABASE.get(id)
+    if not applicant:
+        raise HTTPException(status_code=404, detail="Applicant not found")
+    return {
+        "applicant_id": id,
+        "personal_info": {
+            "name": applicant["name"],
+            "email": applicant["email"],
+            "phone": applicant["phone"],
+            "occupation": applicant["occupation"],
+            "location": applicant["location"]
+        },
+        "financial_profile": applicant.get("financial_profile"),
+        "credit_report": applicant.get("credit_report"),
+        "loan_history": applicant["tfd"]["loan_history"],
+        "bank_accounts": applicant["bank_accounts"],
+        "behavioral_stability": applicant["bsi"],
+        "apex_score": applicant["apex_score"],
+        "risk_level": applicant["risk_level"],
+        "recommendation": applicant["action_recommendation"],
+        "report_generated_at": datetime.datetime.utcnow().isoformat()
+    }
